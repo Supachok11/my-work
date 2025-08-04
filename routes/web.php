@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LeaveRequestController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -16,7 +17,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected Routes
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [LeaveRequestController::class, 'index'])->name('dashboard');
+    Route::post('/leave-request', [LeaveRequestController::class, 'store'])->name('leave-request.store');
+    Route::get('/leave-history', [LeaveRequestController::class, 'history'])->name('leave-history');
 });
