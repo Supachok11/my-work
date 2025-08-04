@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\LeaveRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 use App\Models\User;
+use App\Mail\LeaveRequestNotification;
 
 class LeaveRequestController extends Controller
 {
@@ -68,7 +70,14 @@ class LeaveRequestController extends Controller
             'attachment_path' => $attachmentPath,
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'ส่งคำขอลางานเรียบร้อยแล้ว');
+        
+        $leaveRequest = LeaveRequest::where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->first();
+            
+        Mail::to('outhailnw@gmail.com')->send(new LeaveRequestNotification($leaveRequest));
+
+        return redirect()->route('dashboard')->with('success', 'ส่งคำขอลางานเรียบร้อยแล้ว และแจ้งเตือนหัวหน้าแล้ว');
     }
 
     public function history()
