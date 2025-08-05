@@ -33,8 +33,7 @@
         </header>
 
         <!-- สถิติการลางาน -->
-        <div
-            class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-4 border border-gray-100 dark:border-gray-700">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-4 border border-gray-100 dark:border-gray-700">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold flex items-center">
                     ปี {{ thaidate('Y') }}
@@ -172,8 +171,7 @@
                 <!-- Card View -->
                 <div id="cardView" class="view-container hidden space-y-4">
                     @foreach ($leaveRequests as $request)
-                        <div
-                            class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 overflow-hidden">
+                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 overflow-hidden">
                             @if ($request->leave_type === 'ลากิจ')
                                 <div class="bg-orange-500 text-white p-4 flex items-center space-x-3">
                                     <div
@@ -190,11 +188,19 @@
                                         <div class="font-semibold text-lg">ลากิจ : {{ $totalDays }} วัน</div>
                                         <div class="font-semibold text-lg">
                                             ({{ $request->range_start_date->thaidate('j M Y') }} -
-                                            {{ $request->range_end_date->thaidate('j M Y') }})</div>
+                                            {{ $request->range_end_date->thaidate('j M Y') }})
+                                        </div>
                                     @else
                                         <div class="font-semibold text-lg">ลากิจ : 1 วัน</div>
                                         <div class="font-semibold text-lg">(วันที่
                                             {{ $request->leave_date->thaidate('j M Y') }})</div>
+                                        @if ($request->duration_type === 'ทั้งวัน')
+                                        @else
+                                            <div class="font-semibold text-lg">
+                                                {{ $request->start_time->format('H:i') }} -
+                                                {{ $request->end_time->format('H:i') }} น.
+                                            </div>
+                                        @endif
                                     @endif
                                 </div>
                             @else
@@ -215,15 +221,16 @@
                                             ({{ $request->range_start_date->thaidate('j M Y') }} -
                                             {{ $request->range_end_date->thaidate('j M Y') }})</div>
                                     @else
-                                        <div class="font-semibold text-lg">ลาป่วย :
-                                            @if ($request->duration_type === 'ทั้งวัน')
-                                                1 วัน
-                                            @else
-                                                ชั่วโมง
-                                            @endif
-                                        </div>
-                                        <div class="text-sm opacity-90">(วันที่
+                                        <div class="font-semibold text-lg">ลาป่วย : 1 วัน</div>
+                                        <div class="font-semibold text-lg">(วันที่
                                             {{ $request->leave_date->thaidate('j M Y') }})</div>
+                                        @if ($request->duration_type === 'ทั้งวัน')
+                                        @else
+                                            <div class="font-semibold text-lg">
+                                                {{ $request->start_time->format('H:i') }} -
+                                                {{ $request->end_time->format('H:i') }} น.
+                                            </div>
+                                        @endif
                                     @endif
                                 </div>
                             @endif
