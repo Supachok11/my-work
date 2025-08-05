@@ -21,7 +21,7 @@ return new class extends Migration
             $table->time('end_time')->nullable();
             $table->text('additional_info')->nullable();
             $table->string('attachment_path')->nullable();
-            $table->enum('status', ['รอพิจารณา', 'อนุมัติ', 'ไม่อนุมัติ'])->default('รอพิจารณา');
+            $table->enum('status', ['รออนุมัติ', 'อนุมัติ', 'ไม่อนุมัติ'])->default('รออนุมัติ');
             $table->timestamps();
         });
     }

@@ -16,7 +16,7 @@ class LeaveRequestController extends Controller
     {
         $user = Auth::user();
         $currentYear = now()->year;
-        
+
         // คำนวณสถิติการลางานในปีปัจจุบัน - ใช้ LeaveRequest model โดยตรง
         $leaveStats = [
             'total_days' => LeaveRequest::where('user_id', $user->id)
@@ -70,11 +70,11 @@ class LeaveRequestController extends Controller
             'attachment_path' => $attachmentPath,
         ]);
 
-        
+
         $leaveRequest = LeaveRequest::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->first();
-            
+
         Mail::to('outhailnw@gmail.com')->send(new LeaveRequestNotification($leaveRequest));
 
         return redirect()->route('dashboard')->with('success', 'ส่งคำขอลางานเรียบร้อยแล้ว และแจ้งเตือนหัวหน้าแล้ว');
@@ -83,10 +83,30 @@ class LeaveRequestController extends Controller
     public function history()
     {
         $user = Auth::user();
+        $currentYear = now()->year;
+
+        // เพิ่มการคำนวณสถิติการลางานเหมือนในหน้า dashboard
+        $leaveStats = [
+            'total_days' => LeaveRequest::where('user_id', $user->id)
+                ->whereYear('leave_date', $currentYear)
+                ->where('status', 'อนุมัติ')
+                ->count(),
+            'personal_leave' => LeaveRequest::where('user_id', $user->id)
+                ->whereYear('leave_date', $currentYear)
+                ->where('status', 'อนุมัติ')
+                ->where('leave_type', 'ลากิจ')
+                ->count(),
+            'sick_leave' => LeaveRequest::where('user_id', $user->id)
+                ->whereYear('leave_date', $currentYear)
+                ->where('status', 'อนุมัติ')
+                ->where('leave_type', 'ลาป่วย')
+                ->count(),
+        ];
+
         $leaveRequests = LeaveRequest::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return view('leave-history', compact('leaveRequests'));
+        return view('leave-history', compact('leaveRequests', 'leaveStats'));
     }
 }

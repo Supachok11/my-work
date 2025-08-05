@@ -15,9 +15,18 @@
             }
         };
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
     <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+        }
+
         .radio-option {
             transition: all 0.3s ease;
         }
@@ -192,21 +201,21 @@
 
 <body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] dark:text-white min-h-screen">
     <div class="max-w-2xl mx-auto p-6">
-        <header
+        <div
             class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-4 border border-gray-100 dark:border-gray-700">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
                 <div class="flex items-center">
                     <div>
-                        <h1 class="text-3xl font-bold text-white-600">
+                        <h1 class="text-3xl font-bold text-white-600 mb-5">
                             MY WORK
                         </h1>
-                        <h1 class="text-2xl text-center font-thin text-white-600">
+                        <h1 class="text-2xl text-center font-normal text-white-600 mb-5">
                             ลางาน
                         </h1>
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-4 mb-5">
                     <!-- Dark/Light Mode Toggle -->
                     <button id="themeToggle"
                         class="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300">
@@ -247,53 +256,48 @@
                     </form>
                 </div>
             </div>
-        </header>
 
-        @if (session('success'))
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'ส่งคำขอลางานเรียบร้อย!',
-                        text: '{{ session('success') }}',
-                        confirmButtonText: 'ตกลง',
-                        confirmButtonColor: '#10B981',
-                        timer: 5000,
-                        timerProgressBar: true
+
+            @if (session('success'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'ส่งคำขอลางานเรียบร้อย!',
+                            text: '{{ session('success') }}',
+                            confirmButtonText: 'ตกลง',
+                            confirmButtonColor: '#10B981',
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
                     });
-                });
-            </script>
-        @endif
+                </script>
+            @endif
 
-        <!-- สถิติการลางาน -->
-        <div
-            class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-4 border border-gray-100 dark:border-gray-700">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold flex items-center">
                     ปี {{ thaidate('Y') }}
                 </h2>
             </div>
 
-            <!-- บรรทัดแรก: คุณได้ลางานไปแล้วทั้งหมด -->
-            <div class="flex items-center justify-between p-4 rounded-lg mb-4">
+            <div class="flex items-center justify-between rounded-lg mb-4">
                 <span class="text-lg font-medium">คุณได้ลางานไปแล้วทั้งหมด</span>
                 <span
-                    class="text-2xl bg-blue-500 text-white p-2 px-10 rounded-lg font-bold">{{ $leaveStats['total_days'] }}
+                    class="text-xl bg-blue-500 text-white p-2 px-30 rounded-lg font-bold">{{ $leaveStats['total_days'] }}
                     วัน</span>
             </div>
 
-            <!-- บรรทัดที่สอง: ลากิจ และ ลาป่วย -->
             <div class="grid grid-cols-2 gap-4">
-                <div class="flex items-center justify-between p-4 rounded-lg">
-                    <span class="text-lg font-medium">ลากิจ</span>
+                <div class="flex items-center justify-between rounded-lg">
+                    <span class="text-lg font-medium">ลากิจ</span> 
                     <span
-                        class="text-xl text-white bg-purple-500 p-2 px-10 rounded-lg font-bold">{{ $leaveStats['personal_leave'] }}
-                        วัน</span>
+                        class="text-xl text-white bg-purple-500 p-2 px-15 rounded-lg font-bold">{{ $leaveStats['personal_leave'] }}
+                        วัน</span> |
                 </div>
-                <div class="flex items-center justify-between p-4 rounded-lg">
+                <div class="flex items-center justify-between rounded-lg">
                     <span class="text-lg font-medium">ลาป่วย</span>
                     <span
-                        class="text-xl text-white bg-cyan-500 p-2 px-10 rounded-lg font-bold">{{ $leaveStats['sick_leave'] }}
+                        class="text-xl text-white bg-cyan-500 p-2 px-15 rounded-lg font-bold">{{ $leaveStats['sick_leave'] }}
                         วัน</span>
                 </div>
             </div>
@@ -309,9 +313,9 @@
                     ดูประวัติการลางาน
                 </a>
             </div>
-        </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 border border-gray-100 dark:border-gray-700">
+            <hr class="my-6 border-gray-300 dark:border-gray-600">
+
             <div class="text-center mb-8">
                 <h2 class="text-2xl font-bold ">กรอกข้อมูลขอลางาน</h2>
             </div>
@@ -338,7 +342,8 @@
                         class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all duration-300 hover:border-blue-300">
                         <option value="">เลือกประเภทการลางาน</option>
                         <option value="ลากิจ" {{ old('leave_type') == 'ลากิจ' ? 'selected' : '' }}>ลากิจ</option>
-                        <option value="ลาป่วย" {{ old('leave_type') == 'ลาป่วย' ? 'selected' : '' }}>ลาป่วย</option>
+                        <option value="ลาป่วย" {{ old('leave_type') == 'ลาป่วย' ? 'selected' : '' }}>ลาป่วย
+                        </option>
                     </select>
                     @error('leave_type')
                         <p class="text-red-500 text-sm mt-2 flex items-center">
@@ -376,7 +381,8 @@
                                 </div>
                                 <div>
                                     <span class="radio-text font-medium block">ทั้งวัน</span>
-                                    <p class="radio-description text-sm text-gray-500 dark:text-gray-400">ลาตลอดวัน</p>
+                                    <p class="radio-description text-sm text-gray-500 dark:text-gray-400">ลาตลอดวัน
+                                    </p>
                                 </div>
                             </label>
                         </div>
@@ -548,7 +554,8 @@
                                     <div class="text-left">
                                         <p class="font-medium text-gray-700 dark:text-gray-300" id="fileName">
                                             ไฟล์ที่เลือก</p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400" id="fileSize">0 KB</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400" id="fileSize">0 KB
+                                        </p>
                                     </div>
                                 </div>
                                 <button type="button" class="text-red-500 hover:text-red-700 transition-colors"
