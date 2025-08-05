@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 use App\Models\LeaveRequest;
 
@@ -50,6 +51,50 @@ class LeaveRequestNotification extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        $attachments = [];
+        
+        // ตรวจสอบว่ามีไฟล์แนบหรือไม่
+        if ($this->leaveRequest->attachment_path) {
+            // สร้างเส้นทางเต็มของไฟล์
+            $fullPath = storage_path('app/public/' . $this->leaveRequest->attachment_path);
+            
+            // ตรวจสอบว่าไฟล์มีอยู่จริงหรือไม่
+            if (file_exists($fullPath)) {
+                // ดึงชื่อไฟล์เดิมจาก path
+                $originalFileName = basename($this->leaveRequest->attachment_path);
+                
+                // เพิ่มข้อมูลผู้ใช้และวันที่ลงในชื่อไฟล์
+                $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
+                $fileName = sprintf(
+                     'เอกสารแนบ_%s_%s.%s',
+                    $this->leaveRequest->user->name,
+                    $this->leaveRequest->leave_date->format('Y-m-d'),
+                    $fileExtension
+                );
+                
+                $attachments[] = Attachment::fromPath($fullPath)
+                    ->as($fileName)
+                    ->withMime($this->getMimeType($fileExtension));
+            }
+        }
+        
+        return $attachments;
+    }
+    
+    /**
+     * กำหนด MIME type ตาม file extension
+     */
+    private function getMimeType($extension): string
+    {
+        $mimeTypes = [
+            'pdf' => 'application/pdf',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ];
+        
+        return $mimeTypes[strtolower($extension)] ?? 'application/octet-stream';
     }
 }

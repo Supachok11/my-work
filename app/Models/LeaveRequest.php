@@ -20,7 +20,7 @@ class LeaveRequest extends Model
     ];
 
     protected $casts = [
-        'leave_date' => 'date',
+        'leave_date' => 'datetime',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
     ];
