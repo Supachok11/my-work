@@ -105,12 +105,6 @@
                     </p>
                 </div>
             </div>
-
-            <div class="text-center">
-                <a href="{{ url('/') }}" class="text-blue-600 underline hover:text-blue-700">
-                    กลับหน้าหลัก
-                </a>
-            </div>
         </div>
     </body>
 </html>

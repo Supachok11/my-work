@@ -17,22 +17,38 @@ class LeaveRequestController extends Controller
         $user = Auth::user();
         $currentYear = now()->year;
 
-        // คำนวณสถิติการลางานในปีปัจจุบัน - ใช้ LeaveRequest model โดยตรง
+        // คำนวณสถิติการลางานในปีปัจจุบัน - คำนวณจำนวนวันจริง
+        $totalDays = 0;
+        $personalLeaveDays = 0;
+        $sickLeaveDays = 0;
+
+        $leaveRequests = LeaveRequest::where('user_id', $user->id)
+            ->whereYear('leave_date', $currentYear)
+            ->where('status', 'อนุมัติ')
+            ->get();
+
+        foreach ($leaveRequests as $request) {
+            if ($request->is_range && $request->range_start_date && $request->range_end_date) {
+                // คำนวณจำนวนวันสำหรับการลาหลายวัน
+                $days = \Carbon\Carbon::parse($request->range_start_date)->diffInDays(\Carbon\Carbon::parse($request->range_end_date)) + 1;
+            } else {
+                // การลาวันเดียว
+                $days = 1;
+            }
+
+            $totalDays += $days;
+
+            if ($request->leave_type === 'ลากิจ') {
+                $personalLeaveDays += $days;
+            } elseif ($request->leave_type === 'ลาป่วย') {
+                $sickLeaveDays += $days;
+            }
+        }
+
         $leaveStats = [
-            'total_days' => LeaveRequest::where('user_id', $user->id)
-                ->whereYear('leave_date', $currentYear)
-                ->where('status', 'อนุมัติ')
-                ->count(),
-            'personal_leave' => LeaveRequest::where('user_id', $user->id)
-                ->whereYear('leave_date', $currentYear)
-                ->where('status', 'อนุมัติ')
-                ->where('leave_type', 'ลากิจ')
-                ->count(),
-            'sick_leave' => LeaveRequest::where('user_id', $user->id)
-                ->whereYear('leave_date', $currentYear)
-                ->where('status', 'อนุมัติ')
-                ->where('leave_type', 'ลาป่วย')
-                ->count(),
+            'total_days' => $totalDays,
+            'personal_leave' => $personalLeaveDays,
+            'sick_leave' => $sickLeaveDays,
         ];
 
         $leaveRequests = LeaveRequest::where('user_id', $user->id)
@@ -44,40 +60,81 @@ class LeaveRequestController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        // ตรวจสอบประเภทการเลือกวันที่
+        $dateSelectionType = $request->input('date_selection_type', 'single');
+        
+        $validationRules = [
             'leave_type' => 'required|in:ลากิจ,ลาป่วย',
             'duration_type' => 'required|in:ทั้งวัน,ชั่วโมง',
-            'leave_date' => 'required|date|after_or_equal:today',
             'start_time' => 'required_if:duration_type,ชั่วโมง|nullable|date_format:H:i',
             'end_time' => 'required_if:duration_type,ชั่วโมง|nullable|date_format:H:i|after:start_time',
             'additional_info' => 'required|string|max:1000',
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:2048',
-        ]);
+        ];
+
+        // เพิ่มกฎการตรวจสอบตามประเภทการเลือกวันที่
+        if ($dateSelectionType === 'range') {
+            $validationRules['start_date'] = 'required|date|after_or_equal:today';
+            $validationRules['end_date'] = 'required|date|after_or_equal:start_date';
+        } else {
+            $validationRules['leave_date'] = 'required|date|after_or_equal:today';
+        }
+
+        $request->validate($validationRules);
 
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
             $attachmentPath = $request->file('attachment')->store('leave_attachments', 'public');
         }
 
-        LeaveRequest::create([
-            'user_id' => Auth::id(),
-            'leave_type' => $request->leave_type,
-            'duration_type' => $request->duration_type,
-            'leave_date' => $request->leave_date,
-            'start_time' => $request->duration_type === 'ชั่วโมง' ? $request->start_time : null,
-            'end_time' => $request->duration_type === 'ชั่วโมง' ? $request->end_time : null,
-            'additional_info' => $request->additional_info,
-            'attachment_path' => $attachmentPath,
-        ]);
+        // สร้างคำขอลางานตามประเภทการเลือกวันที่
+        if ($dateSelectionType === 'range') {
+            // ลาหลายวัน - สร้างคำขอเดียวที่แทนทั้งช่วงวันที่
+            $startDate = new \DateTime($request->start_date);
+            $endDate = new \DateTime($request->end_date);
+            $totalDays = $endDate->diff($startDate)->days + 1;
+            
+            // สร้างคำขอหลักสำหรับการลาหลายวัน
+            LeaveRequest::create([
+                'user_id' => Auth::id(),
+                'leave_type' => $request->leave_type,
+                'duration_type' => $request->duration_type,
+                'leave_date' => $request->start_date, // ใช้วันแรกเป็น leave_date หลัก
+                'start_time' => $request->duration_type === 'ชั่วโมง' ? $request->start_time : null,
+                'end_time' => $request->duration_type === 'ชั่วโมง' ? $request->end_time : null,
+                'additional_info' => $request->additional_info,
+                'attachment_path' => $attachmentPath,
+                'is_range' => true,
+                'range_start_date' => $request->start_date,
+                'range_end_date' => $request->end_date,
+            ]);
+            
+            $successMessage = "ส่งคำขอลางานเรียบร้อยแล้ว (รวม {$totalDays} วัน) และแจ้งเตือนหัวหน้าแล้ว";
+        } else {
+            // ลาวันเดียว
+            LeaveRequest::create([
+                'user_id' => Auth::id(),
+                'leave_type' => $request->leave_type,
+                'duration_type' => $request->duration_type,
+                'leave_date' => $request->leave_date,
+                'start_time' => $request->duration_type === 'ชั่วโมง' ? $request->start_time : null,
+                'end_time' => $request->duration_type === 'ชั่วโมง' ? $request->end_time : null,
+                'additional_info' => $request->additional_info,
+                'attachment_path' => $attachmentPath,
+                'is_range' => false,
+            ]);
+            
+            $successMessage = 'ส่งคำขอลางานเรียบร้อยแล้ว และแจ้งเตือนหัวหน้าแล้ว';
+        }
 
-
+        // ส่งอีเมลแจ้งเตือน (ใช้คำขอล่าสุด)
         $leaveRequest = LeaveRequest::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->first();
 
         Mail::to('outhailnw@gmail.com')->send(new LeaveRequestNotification($leaveRequest));
 
-        return redirect()->route('dashboard')->with('success', 'ส่งคำขอลางานเรียบร้อยแล้ว และแจ้งเตือนหัวหน้าแล้ว');
+        return redirect()->route('dashboard')->with('success', $successMessage);
     }
 
     public function history()
@@ -86,21 +143,37 @@ class LeaveRequestController extends Controller
         $currentYear = now()->year;
 
         // เพิ่มการคำนวณสถิติการลางานเหมือนในหน้า dashboard
+        $totalDays = 0;
+        $personalLeaveDays = 0;
+        $sickLeaveDays = 0;
+
+        $approvedRequests = LeaveRequest::where('user_id', $user->id)
+            ->whereYear('leave_date', $currentYear)
+            ->where('status', 'อนุมัติ')
+            ->get();
+
+        foreach ($approvedRequests as $request) {
+            if ($request->is_range && $request->range_start_date && $request->range_end_date) {
+                // คำนวณจำนวนวันสำหรับการลาหลายวัน
+                $days = \Carbon\Carbon::parse($request->range_start_date)->diffInDays(\Carbon\Carbon::parse($request->range_end_date)) + 1;
+            } else {
+                // การลาวันเดียว
+                $days = 1;
+            }
+
+            $totalDays += $days;
+
+            if ($request->leave_type === 'ลากิจ') {
+                $personalLeaveDays += $days;
+            } elseif ($request->leave_type === 'ลาป่วย') {
+                $sickLeaveDays += $days;
+            }
+        }
+
         $leaveStats = [
-            'total_days' => LeaveRequest::where('user_id', $user->id)
-                ->whereYear('leave_date', $currentYear)
-                ->where('status', 'อนุมัติ')
-                ->count(),
-            'personal_leave' => LeaveRequest::where('user_id', $user->id)
-                ->whereYear('leave_date', $currentYear)
-                ->where('status', 'อนุมัติ')
-                ->where('leave_type', 'ลากิจ')
-                ->count(),
-            'sick_leave' => LeaveRequest::where('user_id', $user->id)
-                ->whereYear('leave_date', $currentYear)
-                ->where('status', 'อนุมัติ')
-                ->where('leave_type', 'ลาป่วย')
-                ->count(),
+            'total_days' => $totalDays,
+            'personal_leave' => $personalLeaveDays,
+            'sick_leave' => $sickLeaveDays,
         ];
 
         $leaveRequests = LeaveRequest::where('user_id', $user->id)

@@ -289,7 +289,7 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div class="flex items-center justify-between rounded-lg">
-                    <span class="text-lg font-medium">ลากิจ</span> 
+                    <span class="text-lg font-medium">ลากิจ</span>
                     <span
                         class="text-xl text-white bg-purple-500 p-2 px-15 rounded-lg font-bold">{{ $leaveStats['personal_leave'] }}
                         วัน</span> |
@@ -416,7 +416,7 @@
 
                 <!-- วันที่ต้องการลา -->
                 <div class="space-y-2">
-                    <label for="leave_date" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         <span class="flex items-center">
                             <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
@@ -428,10 +428,106 @@
                             <span class="text-red-500 ml-1">*</span>
                         </span>
                     </label>
-                    <input type="date" name="leave_date" id="leave_date" value="{{ old('leave_date') }}"
-                        required min="{{ date('Y-m-d') }}"
-                        class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all duration-300 hover:border-blue-300">
+
+                    <!-- ประเภทการเลือกวันที่ -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div class="radio-option">
+                            <input type="radio" name="date_selection_type" value="single" id="single_date" checked
+                                class="sr-only">
+                            <label for="single_date"
+                                class="radio-content cursor-pointer flex items-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-blue-300 transition-all duration-300">
+                                <div
+                                    class="radio-indicator w-5 h-5 border-2 border-gray-300 rounded-full mr-3 flex items-center justify-center">
+                                    <div class="radio-dot w-2 h-2 bg-blue-500 rounded-full opacity-0"></div>
+                                </div>
+                                <div>
+                                    <span class="radio-text font-medium block">วันเดียว</span>
+                                    <p class="radio-description text-sm text-gray-500 dark:text-gray-400">
+                                        ลาเพียงวันเดียว</p>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="date_selection_type" value="range" id="date_range"
+                                class="sr-only">
+                            <label for="date_range"
+                                class="radio-content cursor-pointer flex items-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-blue-300 transition-all duration-300">
+                                <div
+                                    class="radio-indicator w-5 h-5 border-2 border-gray-300 rounded-full mr-3 flex items-center justify-center">
+                                    <div class="radio-dot w-2 h-2 bg-blue-500 rounded-full opacity-0"></div>
+                                </div>
+                                <div>
+                                    <span class="radio-text font-medium block">หลายวัน</span>
+                                    <p class="radio-description text-sm text-gray-500 dark:text-gray-400">
+                                        ลาติดต่อกันหลายวัน</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Single Date Input -->
+                    <div id="single_date_field">
+                        <input type="date" name="leave_date" id="leave_date" value="{{ old('leave_date') }}"
+                            required min="{{ date('Y-m-d') }}"
+                            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all duration-300 hover:border-blue-300">
+                    </div>
+
+                    <div id="date_range_fields"
+                        class="hidden space-y-4 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-700">
+                        <div class="flex items-center mb-4">
+                            <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            <h3 class="font-semibold text-blue-700 dark:text-blue-300">ระบุช่วงวันที่ต้องการลา</h3>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="start_date"
+                                    class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">วันที่เริ่มต้น</label>
+                                <input type="date" name="start_date" id="start_date"
+                                    value="{{ old('start_date') }}" min="{{ date('Y-m-d') }}"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all duration-300">
+                            </div>
+                            <div>
+                                <label for="end_date"
+                                    class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">วันที่สิ้นสุด</label>
+                                <input type="date" name="end_date" id="end_date" value="{{ old('end_date') }}"
+                                    min="{{ date('Y-m-d') }}"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all duration-300">
+                            </div>
+                        </div>
+                        <div id="date_summary" class="hidden mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-sm font-medium text-green-700 dark:text-green-300" id="summary_text"></span>
+                            </div>
+                        </div>
+                    </div>
+
                     @error('leave_date')
+                        <p class="text-red-500 text-sm mt-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                    @error('start_date')
+                        <p class="text-red-500 text-sm mt-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                    @error('end_date')
                         <p class="text-red-500 text-sm mt-2 flex items-center">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -633,6 +729,18 @@
             const submitBtn = document.getElementById('submitBtn');
             const leaveForm = document.getElementById('leaveForm');
 
+            // Date selection functionality
+            const singleDateRadio = document.getElementById('single_date');
+            const dateRangeRadio = document.getElementById('date_range');
+            const singleDateField = document.getElementById('single_date_field');
+            const dateRangeFields = document.getElementById('date_range_fields');
+            const startDateInput = document.getElementById('start_date');
+            const endDateInput = document.getElementById('end_date');
+            const leaveDateInput = document.getElementById('leave_date');
+            const dateSummary = document.getElementById('date_summary');
+            const summaryText = document.getElementById('summary_text');
+
+            // File upload elements
             const fileInput = document.getElementById('attachment');
             const fileUploadArea = document.getElementById('fileUploadArea');
             const uploadPlaceholder = document.getElementById('uploadPlaceholder');
@@ -641,6 +749,70 @@
             const fileSize = document.getElementById('fileSize');
             const fileIcon = document.getElementById('fileIcon');
             const removeFileBtn = document.getElementById('removeFile');
+
+            function toggleDateFields() {
+                if (dateRangeRadio.checked) {
+                    singleDateField.classList.add('hidden');
+                    dateRangeFields.classList.remove('hidden');
+                    leaveDateInput.required = false;
+                    startDateInput.required = true;
+                    endDateInput.required = true;
+                } else {
+                    singleDateField.classList.remove('hidden');
+                    dateRangeFields.classList.add('hidden');
+                    leaveDateInput.required = true;
+                    startDateInput.required = false;
+                    endDateInput.required = false;
+                    startDateInput.value = '';
+                    endDateInput.value = '';
+                    dateSummary.classList.add('hidden');
+                }
+            }
+
+            function calculateDateRange() {
+                if (startDateInput.value && endDateInput.value) {
+                    const startDate = new Date(startDateInput.value);
+                    const endDate = new Date(endDateInput.value);
+
+                    if (endDate >= startDate) {
+                        const timeDiff = endDate.getTime() - startDate.getTime();
+                        const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+
+                        const startDateThai = startDate.toLocaleDateString('th-TH', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        const endDateThai = endDate.toLocaleDateString('th-TH', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+
+                        summaryText.textContent = `ลางานตั้งแต่ ${startDateThai} ถึง ${endDateThai} รวม ${dayDiff} วัน`;
+                        dateSummary.classList.remove('hidden');
+                    } else {
+                        dateSummary.classList.add('hidden');
+                    }
+                } else {
+                    dateSummary.classList.add('hidden');
+                }
+            }
+
+            // Set minimum date for end_date when start_date changes
+            startDateInput.addEventListener('change', function() {
+                endDateInput.min = this.value;
+                if (endDateInput.value && endDateInput.value < this.value) {
+                    endDateInput.value = this.value;
+                }
+                calculateDateRange();
+            });
+
+            endDateInput.addEventListener('change', calculateDateRange);
+
+            singleDateRadio.addEventListener('change', toggleDateFields);
+            dateRangeRadio.addEventListener('change', toggleDateFields);
+            toggleDateFields();
 
             function toggleTimeFields() {
                 if (hourlyRadio.checked) {
@@ -749,10 +921,12 @@
 
                 const leaveType = document.getElementById('leave_type').value;
                 const durationType = document.querySelector('input[name="duration_type"]:checked');
-                const leaveDate = document.getElementById('leave_date').value;
+                const dateSelectionType = document.querySelector(
+                    'input[name="date_selection_type"]:checked');
                 const additionalInfo = document.getElementById('additional_info').value;
 
-                if (!leaveType || !durationType || !leaveDate || !additionalInfo.trim()) {
+                // ตรวจสอบข้อมูลพื้นฐาน
+                if (!leaveType || !durationType || !additionalInfo.trim()) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'กรุณากรอกข้อมูลให้ครบถ้วน',
@@ -763,6 +937,54 @@
                     return;
                 }
 
+                // ตรวจสอบวันที่
+                let dateInfo = '';
+                let dateValid = false;
+
+                if (dateSelectionType.value === 'single') {
+                    const leaveDate = document.getElementById('leave_date').value;
+                    if (!leaveDate) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'กรุณาเลือกวันที่ลา',
+                            text: 'โปรดเลือกวันที่ต้องการลา',
+                            confirmButtonText: 'ตกลง',
+                            confirmButtonColor: '#3B82F6'
+                        });
+                        return;
+                    }
+                    dateInfo =
+                        `<p><strong>วันที่ลา:</strong> ${new Date(leaveDate).toLocaleDateString('th-TH')}</p>`;
+                    dateValid = true;
+                } else {
+                    const startDate = document.getElementById('start_date').value;
+                    const endDate = document.getElementById('end_date').value;
+
+                    if (!startDate || !endDate) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'กรุณาเลือกช่วงวันที่ลา',
+                            text: 'โปรดเลือกวันที่เริ่มต้นและวันที่สิ้นสุด',
+                            confirmButtonText: 'ตกลง',
+                            confirmButtonColor: '#3B82F6'
+                        });
+                        return;
+                    }
+
+                    const startDateObj = new Date(startDate);
+                    const endDateObj = new Date(endDate);
+                    const dayDiff = Math.ceil((endDateObj.getTime() - startDateObj.getTime()) / (1000 *
+                        3600 * 24)) + 1;
+
+                    dateInfo =
+                        `<p><strong>ช่วงวันที่ลา:</strong> ${startDateObj.toLocaleDateString('th-TH')} - ${endDateObj.toLocaleDateString('th-TH')} (${dayDiff} วัน)</p>`;
+                    dateValid = true;
+                }
+
+                if (!dateValid) return;
+
+                // ตรวจสอบเวลา (ถ้าเลือกชั่วโมง)
+                let timeInfo = '';
                 if (durationType.value === 'ชั่วโมง') {
                     const startTime = document.getElementById('start_time').value;
                     const endTime = document.getElementById('end_time').value;
@@ -777,6 +999,7 @@
                         });
                         return;
                     }
+                    timeInfo = `<p><strong>เวลา:</strong> ${startTime} - ${endTime}</p>`;
                 }
 
                 const attachmentInfo = fileInput.files[0] ?
@@ -789,11 +1012,8 @@
                         <div class="text-left space-y-2">
                             <p><strong>ประเภทการลา:</strong> ${leaveType}</p>
                             <p><strong>ประเภทระยะเวลา:</strong> ${durationType.value}</p>
-                            <p><strong>วันที่ลา:</strong> ${new Date(leaveDate).toLocaleDateString('th-TH')}</p>
-                            ${durationType.value === 'ชั่วโมง' ? 
-                                `<p><strong>เวลา:</strong> ${document.getElementById('start_time').value} - ${document.getElementById('end_time').value}</p>` : 
-                                ''
-                            }
+                            ${dateInfo}
+                            ${timeInfo}
                             <p><strong>ข้อมูลเพิ่มเติม:</strong> ${additionalInfo}</p>
                             ${attachmentInfo}
                         </div>

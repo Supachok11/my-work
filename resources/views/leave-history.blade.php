@@ -122,7 +122,15 @@
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                            {{ $request->leave_date->thaidate('j M y') }}
+                                            @if ($request->is_range && $request->range_start_date && $request->range_end_date)
+                                                {{ $request->range_start_date->thaidate('j M y') }} -
+                                                {{ $request->range_end_date->thaidate('j M y') }}
+                                                <br><small
+                                                    class="text-gray-500">({{ \Carbon\Carbon::parse($request->range_start_date)->diffInDays(\Carbon\Carbon::parse($request->range_end_date)) + 1 }}
+                                                    วัน)</small>
+                                            @else
+                                                {{ $request->leave_date->thaidate('j M y') }}
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                             @if ($request->duration_type === 'ทั้งวัน')
@@ -166,17 +174,28 @@
                     @foreach ($leaveRequests as $request)
                         <div
                             class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 overflow-hidden">
-                            <!-- Header Bar with leave type info -->
                             @if ($request->leave_type === 'ลากิจ')
-                                <div class="bg-orange-300 text-white p-4 flex items-center space-x-3">
+                                <div class="bg-orange-500 text-white p-4 flex items-center space-x-3">
                                     <div
                                         class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
                                         <span class="text-white text-lg">💼</span>
                                     </div>
-                                    <div class="font-semibold text-lg">ลากิจ : 1 วัน</div>
-                                    <div class="font-semibold text-lg">(วันที่
-                                        {{ $request->leave_date->thaidate('j M Y') }})
-                                    </div>
+                                    @if ($request->is_range && $request->range_start_date && $request->range_end_date)
+                                        @php
+                                            $totalDays =
+                                                \Carbon\Carbon::parse($request->range_start_date)->diffInDays(
+                                                    \Carbon\Carbon::parse($request->range_end_date),
+                                                ) + 1;
+                                        @endphp
+                                        <div class="font-semibold text-lg">ลากิจ : {{ $totalDays }} วัน</div>
+                                        <div class="font-semibold text-lg">
+                                            ({{ $request->range_start_date->thaidate('j M Y') }} -
+                                            {{ $request->range_end_date->thaidate('j M Y') }})</div>
+                                    @else
+                                        <div class="font-semibold text-lg">ลากิจ : 1 วัน</div>
+                                        <div class="font-semibold text-lg">(วันที่
+                                            {{ $request->leave_date->thaidate('j M Y') }})</div>
+                                    @endif
                                 </div>
                             @else
                                 <div class="bg-green-600 text-white p-4 flex items-center space-x-3">
@@ -184,16 +203,28 @@
                                         class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
                                         <span class="text-white text-lg">🏥</span>
                                     </div>
-                                    <div class="font-semibold text-lg">ลาป่วย :
-                                        @if ($request->duration_type === 'ทั้งวัน')
-                                            1 วัน
-                                        @else
-                                            ชั่วโมง
-                                        @endif
-                                    </div>
-                                    <div class="font-semibold text-lg">(วันที่
-                                        {{ $request->leave_date->thaidate('j - j M Y') }})
-                                    </div>
+                                    @if ($request->is_range && $request->range_start_date && $request->range_end_date)
+                                        @php
+                                            $totalDays =
+                                                \Carbon\Carbon::parse($request->range_start_date)->diffInDays(
+                                                    \Carbon\Carbon::parse($request->range_end_date),
+                                                ) + 1;
+                                        @endphp
+                                        <div class="font-semibold text-lg">ลาป่วย : {{ $totalDays }} วัน</div>
+                                        <div class="font-semibold text-lg">
+                                            ({{ $request->range_start_date->thaidate('j M Y') }} -
+                                            {{ $request->range_end_date->thaidate('j M Y') }})</div>
+                                    @else
+                                        <div class="font-semibold text-lg">ลาป่วย :
+                                            @if ($request->duration_type === 'ทั้งวัน')
+                                                1 วัน
+                                            @else
+                                                ชั่วโมง
+                                            @endif
+                                        </div>
+                                        <div class="text-sm opacity-90">(วันที่
+                                            {{ $request->leave_date->thaidate('j M Y') }})</div>
+                                    @endif
                                 </div>
                             @endif
 

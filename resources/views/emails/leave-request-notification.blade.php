@@ -104,7 +104,7 @@
 
         <div class="info-row">
             <div class="info-label">📅 วันที่ต้องการลา:</div>
-            <div class="info-value">{{ $leaveRequest->leave_date->format('d/m/Y') }}
+            <div class="info-value">{{ $leaveRequest->leave_date->thaidate('j M Y') }}
                 ({{ $leaveRequest->leave_date->locale('th')->translatedFormat('l') }})</div>
         </div>
 

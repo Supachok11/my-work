@@ -16,13 +16,19 @@ class LeaveRequest extends Model
         'end_time',
         'additional_info',
         'attachment_path',
-        'status'
+        'status',
+        'is_range',
+        'range_start_date',
+        'range_end_date'
     ];
 
     protected $casts = [
         'leave_date' => 'datetime',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
+        'range_start_date' => 'date',
+        'range_end_date' => 'date',
+        'is_range' => 'boolean',
     ];
 
     public function user(): BelongsTo
