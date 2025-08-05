@@ -50,7 +50,7 @@ class LeaveRequestController extends Controller
             'leave_date' => 'required|date|after_or_equal:today',
             'start_time' => 'required_if:duration_type,ชั่วโมง|nullable|date_format:H:i',
             'end_time' => 'required_if:duration_type,ชั่วโมง|nullable|date_format:H:i|after:start_time',
-            'additional_info' => 'nullable|string|max:1000',
+            'additional_info' => 'required|string|max:1000',
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:2048',
         ]);
 
