@@ -105,12 +105,6 @@
                 </div>
 
                 <div class="flex items-center space-x-4">
-                    <div
-                        class="hidden sm:flex items-center space-x-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span class="text-sm text-blue-700 dark:text-blue-300 font-medium">ออนไลน์</span>
-                    </div>
-
                     <div class="flex items-center space-x-2 px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -164,7 +158,7 @@
                             </path>
                         </svg>
                     </div>
-                    ปี {{ date('Y') }}
+                    ปี {{ thaidate('Y') }}
                 </h2>
             </div>
 
@@ -346,9 +340,8 @@
                                     <div class="radio-dot w-2 h-2 bg-blue-500 rounded-full opacity-0"></div>
                                 </div>
                                 <div>
-                                    <span class="radio-text font-medium block">🌅 ทั้งวัน</span>
-                                    <p class="radio-description text-sm text-gray-500 dark:text-gray-400">ลาตลอดวัน (8
-                                        ชั่วโมง)</p>
+                                    <span class="radio-text font-medium block">ทั้งวัน</span>
+                                    <p class="radio-description text-sm text-gray-500 dark:text-gray-400">ลาตลอดวัน</p>
                                 </div>
                             </label>
                         </div>
@@ -362,7 +355,7 @@
                                     <div class="radio-dot w-2 h-2 bg-blue-500 rounded-full opacity-0"></div>
                                 </div>
                                 <div>
-                                    <span class="radio-text font-medium block">⏰ ชั่วโมง</span>
+                                    <span class="radio-text font-medium block">ชั่วโมง</span>
                                     <p class="radio-description text-sm text-gray-500 dark:text-gray-400">
                                         ระบุเวลาเริ่มต้น-สิ้นสุด</p>
                                 </div>

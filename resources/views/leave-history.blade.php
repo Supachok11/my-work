@@ -60,7 +60,7 @@
                             @foreach ($leaveRequests as $request)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        {{ $request->created_at->format('d/m/Y H:i') }}
+                                        {{ $request->created_at->thaidate('j M y  H:i') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span
@@ -70,7 +70,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        {{ $request->leave_date->format('d/m/Y') }}
+                                        {{ $request->leave_date->thaidate('j M y') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                         @if ($request->duration_type === 'ทั้งวัน')
