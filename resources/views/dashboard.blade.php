@@ -7,6 +7,7 @@
     <title>My Work - ระบบลางาน</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -25,11 +26,20 @@
             </form>
         </header>
 
-        <!-- Success Message -->
         @if (session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-                {{ session('success') }}
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ส่งคำขอลางานเรียบร้อย!',
+                        text: '{{ session('success') }}',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#10B981',
+                        timer: 5000,
+                        timerProgressBar: true
+                    });
+                });
+            </script>
         @endif
 
         <!-- สถิติการลางาน -->
@@ -60,15 +70,13 @@
             </div>
         </div>
 
-        <!-- ฟอร์มขอลางาน -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <h2 class="text-2xl font-bold mb-6">ฟอร์มขอลางาน</h2>
 
             <form method="POST" action="{{ route('leave-request.store') }}" enctype="multipart/form-data"
-                class="space-y-6">
+                class="space-y-6" id="leaveForm">
                 @csrf
 
-                <!-- ประเภทการลางาน -->
                 <div>
                     <label for="leave_type" class="block text-sm font-medium mb-2">ประเภทการลางาน *</label>
                     <select name="leave_type" id="leave_type" required
@@ -82,7 +90,6 @@
                     @enderror
                 </div>
 
-                <!-- ประเภทระยะเวลา -->
                 <div>
                     <label class="block text-sm font-medium mb-2">ประเภทระยะเวลา *</label>
                     <div class="flex space-x-4">
@@ -104,7 +111,6 @@
                     @enderror
                 </div>
 
-                <!-- วันที่ต้องการลา -->
                 <div>
                     <label for="leave_date" class="block text-sm font-medium mb-2">วันที่ต้องการลา *</label>
                     <input type="date" name="leave_date" id="leave_date" value="{{ old('leave_date') }}" required
@@ -115,7 +121,6 @@
                     @enderror
                 </div>
 
-                <!-- เวลา (แสดงเมื่อเลือกชั่วโมง) -->
                 <div id="time_fields" class="hidden space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -137,7 +142,6 @@
                     </div>
                 </div>
 
-                <!-- ข้อมูลเพิ่มเติม -->
                 <div>
                     <label for="additional_info" class="block text-sm font-medium mb-2">ข้อมูลเพิ่มเติม</label>
                     <textarea name="additional_info" id="additional_info" rows="4"
@@ -148,7 +152,6 @@
                     @enderror
                 </div>
 
-                <!-- ไฟล์แนบ -->
                 <div>
                     <label for="attachment" class="block text-sm font-medium mb-2">ไฟล์แนบ</label>
                     <input type="file" name="attachment" id="attachment" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
@@ -159,9 +162,8 @@
                     @enderror
                 </div>
 
-                <!-- ปุ่มส่งฟอร์ม -->
                 <div class="pt-4">
-                    <button type="submit"
+                    <button type="button" id="submitBtn"
                         class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition font-medium">
                         ส่งคำขอลางาน
                     </button>
@@ -171,13 +173,14 @@
     </div>
 
     <script>
-        // JavaScript สำหรับแสดง/ซ่อนฟิลด์เวลา
         document.addEventListener('DOMContentLoaded', function() {
             const fullDayRadio = document.getElementById('full_day');
             const hourlyRadio = document.getElementById('hourly');
             const timeFields = document.getElementById('time_fields');
             const startTimeInput = document.getElementById('start_time');
             const endTimeInput = document.getElementById('end_time');
+            const submitBtn = document.getElementById('submitBtn');
+            const leaveForm = document.getElementById('leaveForm');
 
             function toggleTimeFields() {
                 if (hourlyRadio.checked) {
@@ -196,8 +199,82 @@
             fullDayRadio.addEventListener('change', toggleTimeFields);
             hourlyRadio.addEventListener('change', toggleTimeFields);
 
-            // เรียกใช้เมื่อโหลดหน้าเพื่อตรวจสอบค่าเริ่มต้น
             toggleTimeFields();
+
+            // Confirm
+            submitBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const leaveType = document.getElementById('leave_type').value;
+                const durationType = document.querySelector('input[name="duration_type"]:checked');
+                const leaveDate = document.getElementById('leave_date').value;
+
+                if (!leaveType || !durationType || !leaveDate) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+                        text: 'โปรดตรวจสอบและกรอกข้อมูลที่จำเป็นให้ครบถ้วน',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#3B82F6'
+                    });
+                    return;
+                }
+
+                if (durationType.value === 'ชั่วโมง') {
+                    const startTime = document.getElementById('start_time').value;
+                    const endTime = document.getElementById('end_time').value;
+
+                    if (!startTime || !endTime) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'กรุณาระบุเวลา',
+                            text: 'โปรดระบุเวลาเริ่มต้นและเวลาสิ้นสุด',
+                            confirmButtonText: 'ตกลง',
+                            confirmButtonColor: '#3B82F6'
+                        });
+                        return;
+                    }
+                }
+
+                Swal.fire({
+                    icon: 'question',
+                    title: 'ยืนยันการส่งคำขอลางาน',
+                    html: `
+                        <div class="text-left space-y-2">
+                            <p><strong>ประเภทการลา:</strong> ${leaveType}</p>
+                            <p><strong>ประเภทระยะเวลา:</strong> ${durationType.value}</p>
+                            <p><strong>วันที่ลา:</strong> ${new Date(leaveDate).toLocaleDateString('th-TH')}</p>
+                            ${durationType.value === 'ชั่วโมง' ? 
+                                `<p><strong>เวลา:</strong> ${document.getElementById('start_time').value} - ${document.getElementById('end_time').value}</p>` : 
+                                ''
+                            }
+                        </div>
+                        <hr class="my-3">
+                        <p class="text-sm text-gray-600">คุณต้องการส่งคำขอลางานนี้หรือไม่?</p>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'ยืนยันส่งคำขอ',
+                    cancelButtonText: 'ยกเลิก',
+                    confirmButtonColor: '#10B981',
+                    cancelButtonColor: '#EF4444',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'กำลังส่งคำขอลางาน...',
+                            text: 'โปรดรอสักครู่',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showConfirmButton: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        leaveForm.submit();
+                    }
+                });
+            });
         });
     </script>
 </body>
