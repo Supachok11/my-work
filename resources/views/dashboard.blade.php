@@ -21,6 +21,7 @@
         href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
     <style>
         body {
@@ -278,27 +279,119 @@
                 <h2 class="text-2xl font-bold flex items-center">
                     ปี {{ thaidate('Y') }}
                 </h2>
-            </div>
-
-            <div class="flex items-center justify-between rounded-lg mb-4">
-                <span class="text-lg font-medium">คุณได้ลางานไปแล้วทั้งหมด</span>
-                <span
-                    class="text-xl bg-blue-500 text-white p-2 px-30 rounded-lg font-bold">{{ $leaveStats['total_days'] }}
-                    วัน</span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="flex items-center justify-between rounded-lg">
-                    <span class="text-lg font-medium">ลากิจ</span>
-                    <span
-                        class="text-xl text-white bg-purple-500 p-2 px-15 rounded-lg font-bold">{{ $leaveStats['personal_leave'] }}
-                        วัน</span> |
+                
+                <!-- ปุ่มสลับการแสดงผล -->
+                <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                    <button id="normalViewBtn"
+                        class="px-4 py-2 rounded-md text-sm font-medium transition-colors bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm">
+                        📊 แบบปกติ
+                    </button>
+                    <button id="chartViewBtn"
+                        class="px-4 py-2 rounded-md text-sm font-medium transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                        🥧 Pie Chart
+                    </button>
                 </div>
-                <div class="flex items-center justify-between rounded-lg">
-                    <span class="text-lg font-medium">ลาป่วย</span>
+            </div>
+
+            <!-- การแสดงแบบปกติ -->
+            <div id="normalView" class="stats-container">
+                <div class="flex items-center justify-between rounded-lg mb-4">
+                    <span class="text-lg font-medium">คุณได้ลางานไปแล้วทั้งหมด</span>
                     <span
-                        class="text-xl text-white bg-cyan-500 p-2 px-15 rounded-lg font-bold">{{ $leaveStats['sick_leave'] }}
+                        class="text-xl bg-blue-500 text-white p-2 px-30 rounded-lg font-bold">{{ $leaveStats['total_days'] }}
                         วัน</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex items-center justify-between rounded-lg">
+                        <span class="text-lg font-medium">ลากิจ</span>
+                        <span
+                            class="text-xl text-white bg-purple-500 p-2 px-15 rounded-lg font-bold">{{ $leaveStats['personal_leave'] }}
+                            วัน</span> |
+                    </div>
+                    <div class="flex items-center justify-between rounded-lg">
+                        <span class="text-lg font-medium">ลาป่วย</span>
+                        <span
+                            class="text-xl text-white bg-cyan-500 p-2 px-15 rounded-lg font-bold">{{ $leaveStats['sick_leave'] }}
+                            วัน</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- การแสดงแบบ Pie Chart -->
+            <div id="chartView" class="stats-container hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Pie Chart -->
+                    <div class="flex flex-col items-center">
+                        <div class="w-80 h-80">
+                            <canvas id="leaveStatsChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- สถิติย่อย -->
+                    <div class="flex flex-col justify-center space-y-4">
+                        <div class="bg-blue-500 rounded-xl p-4 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-blue-100 text-sm">ลางานทั้งหมด</p>
+                                    <p class="text-2xl font-bold">{{ $leaveStats['total_days'] }} วัน</p>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-full p-2">
+                                    📊
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-purple-500 rounded-xl p-4 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-purple-100 text-sm">ลากิจ</p>
+                                    <p class="text-2xl font-bold">{{ $leaveStats['personal_leave'] }} วัน</p>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-full p-2">
+                                    💼
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-cyan-500 rounded-xl p-4 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-cyan-100 text-sm">ลาป่วย</p>
+                                    <p class="text-2xl font-bold">{{ $leaveStats['sick_leave'] }} วัน</p>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-full p-2">
+                                    🏥
+                                </div>
+                            </div>
+                        </div>
+                        
+                        @php
+                            $totalDays = $leaveStats['total_days'];
+                            $personalPercentage = $totalDays > 0 ? round(($leaveStats['personal_leave'] / $totalDays) * 100, 1) : 0;
+                            $sickPercentage = $totalDays > 0 ? round(($leaveStats['sick_leave'] / $totalDays) * 100, 1) : 0;
+                        @endphp
+                        
+                        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+                            <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">สัดส่วนการลา</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between text-sm">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                                        <span>ลากิจ</span>
+                                    </div>
+                                    <span class="font-medium">{{ $personalPercentage }}%</span>
+                                </div>
+                                <div class="flex items-center justify-between text-sm">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-cyan-500 rounded-full mr-2"></div>
+                                        <span>ลาป่วย</span>
+                                    </div>
+                                    <span class="font-medium">{{ $sickPercentage }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -691,7 +784,172 @@
     </div>
 
     <script>
+        let leaveStatsChart;
+
+        // ฟังก์ชันสำหรับเปลี่ยนการแสดงผล
+        function toggleView(viewType) {
+            const normalView = document.getElementById('normalView');
+            const chartView = document.getElementById('chartView');
+            const normalBtn = document.getElementById('normalViewBtn');
+            const chartBtn = document.getElementById('chartViewBtn');
+
+            if (viewType === 'normal') {
+                // แสดงแบบปกติ
+                normalView.classList.remove('hidden');
+                chartView.classList.add('hidden');
+                
+                // อัพเดทปุ่ม - ปุ่มปกติเป็น active
+                normalBtn.classList.add('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+                normalBtn.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-white');
+                
+                chartBtn.classList.remove('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+                chartBtn.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-white');
+                
+                // ทำลาย Chart หากมี
+                if (leaveStatsChart) {
+                    leaveStatsChart.destroy();
+                    leaveStatsChart = null;
+                }
+            } else {
+                // แสดงแบบ Pie Chart
+                normalView.classList.add('hidden');
+                chartView.classList.remove('hidden');
+                
+                // อัพเดทปุ่ม - ปุ่ม chart เป็น active
+                chartBtn.classList.add('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+                chartBtn.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-white');
+                
+                normalBtn.classList.remove('bg-white', 'dark:bg-gray-600', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+                normalBtn.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-900', 'dark:hover:text-white');
+                
+                // สร้าง Pie Chart
+                setTimeout(() => {
+                    createPieChart();
+                }, 100);
+            }
+        }
+
+        // ฟังก์ชันสร้าง Pie Chart
+        function createPieChart() {
+            const ctx = document.getElementById('leaveStatsChart').getContext('2d');
+            
+            const personalLeave = {{ $leaveStats['personal_leave'] }};
+            const sickLeave = {{ $leaveStats['sick_leave'] }};
+            
+            // หากไม่มีข้อมูลการลา
+            if (personalLeave === 0 && sickLeave === 0) {
+                leaveStatsChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['ยังไม่มีการลา'],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#e5e7eb'],
+                            borderColor: ['#d1d5db'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    font: {
+                                        size: 14
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'ยังไม่มีข้อมูลการลา';
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '40%'
+                    }
+                });
+                return;
+            }
+            
+            leaveStatsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ลากิจ', 'ลาป่วย'],
+                    datasets: [{
+                        data: [personalLeave, sickLeave],
+                        backgroundColor: [
+                            '#8b5cf6', // purple-500
+                            '#06b6d4'  // cyan-500
+                        ],
+                        borderColor: [
+                            '#7c3aed', // purple-600
+                            '#0891b2'  // cyan-600
+                        ],
+                        borderWidth: 2,
+                        hoverBackgroundColor: [
+                            '#7c3aed',
+                            '#0891b2'
+                        ],
+                        hoverBorderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 14
+                                },
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label;
+                                    const value = context.parsed;
+                                    const total = personalLeave + sickLeave;
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${value} วัน (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '40%',
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // เริ่มต้นด้วยการแสดงแบบปกติ
+            toggleView('normal');
+            
+            // เพิ่ม Event Listeners สำหรับปุ่มสลับการแสดงผล
+            const normalViewBtn = document.getElementById('normalViewBtn');
+            const chartViewBtn = document.getElementById('chartViewBtn');
+            
+            normalViewBtn.addEventListener('click', function() {
+                toggleView('normal');
+            });
+            
+            chartViewBtn.addEventListener('click', function() {
+                toggleView('chart');
+            });
+            
             // Theme Toggle Functionality
             const themeToggle = document.getElementById('themeToggle');
             const sunIcon = document.getElementById('sunIcon');
