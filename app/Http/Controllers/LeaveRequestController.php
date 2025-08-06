@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Models\User;
 use App\Mail\LeaveRequestNotification;
+use App\Mail\LeaveRequestStatusNotification;
 
 class LeaveRequestController extends Controller
 {
@@ -104,6 +105,7 @@ class LeaveRequestController extends Controller
                 'end_time' => $request->duration_type === 'ชั่วโมง' ? $request->end_time : null,
                 'additional_info' => $request->additional_info,
                 'attachment_path' => $attachmentPath,
+                'status' => 'รออนุมัติ',
                 'is_range' => true,
                 'range_start_date' => $request->start_date,
                 'range_end_date' => $request->end_date,
@@ -121,6 +123,7 @@ class LeaveRequestController extends Controller
                 'end_time' => $request->duration_type === 'ชั่วโมง' ? $request->end_time : null,
                 'additional_info' => $request->additional_info,
                 'attachment_path' => $attachmentPath,
+                'status' => 'รออนุมัติ',
                 'is_range' => false,
             ]);
             
@@ -182,4 +185,113 @@ class LeaveRequestController extends Controller
 
         return view('leave-history', compact('leaveRequests', 'leaveStats'));
     }
+
+    public function approve($id, Request $request)
+    {
+        // ตรวจสอบ token เพื่อความปลอดภัย
+        $token = $request->query('token');
+        if (!$this->verifyToken($id, $token)) {
+            return view('leave-action-result', [
+                'success' => false,
+                'message' => 'ลิงก์ไม่ถูกต้องหรือหมดอายุ',
+                'action' => 'อนุมัติ'
+            ]);
+        }
+
+        $leaveRequest = LeaveRequest::find($id);
+
+        if (!$leaveRequest) {
+            return view('leave-action-result', [
+                'success' => false,
+                'message' => 'ไม่พบคำขอลางานนี้',
+                'action' => 'อนุมัติ'
+            ]);
+        }
+
+        if ($leaveRequest->status !== 'รออนุมัติ') {
+            return view('leave-action-result', [
+                'success' => false,
+                'message' => 'คำขอลางานนี้ได้รับการพิจารณาแล้ว (สถานะปัจจุบัน: ' . $leaveRequest->status . ')',
+                'action' => 'อนุมัติ'
+            ]);
+        }
+
+        // อนุมัติคำขอลางาน
+        $leaveRequest->update([
+            'status' => 'อนุมัติ',
+            'approved_at' => now()
+        ]);
+
+        return view('leave-action-result', [
+            'success' => true,
+            'message' => 'อนุมัติคำขอลางานเรียบร้อยแล้ว',
+            'action' => 'อนุมัติ',
+            'leaveRequest' => $leaveRequest
+        ]);
+    }
+
+    public function reject($id, Request $request)
+    {
+        // ตรวจสอบ token เพื่อความปลอดภัย
+        $token = $request->query('token');
+        if (!$this->verifyToken($id, $token)) {
+            return view('leave-action-result', [
+                'success' => false,
+                'message' => 'ลิงก์ไม่ถูกต้องหรือหมดอายุ',
+                'action' => 'ไม่อนุมัติ'
+            ]);
+        }
+
+        $leaveRequest = LeaveRequest::find($id);
+
+        if (!$leaveRequest) {
+            return view('leave-action-result', [
+                'success' => false,
+                'message' => 'ไม่พบคำขอลางานนี้',
+                'action' => 'ไม่อนุมัติ'
+            ]);
+        }
+
+        if ($leaveRequest->status !== 'รออนุมัติ') {
+            return view('leave-action-result', [
+                'success' => false,
+                'message' => 'คำขอลางานนี้ได้รับการพิจารณาแล้ว (สถานะปัจจุบัน: ' . $leaveRequest->status . ')',
+                'action' => 'ไม่อนุมัติ'
+            ]);
+        }
+
+        // ไม่อนุมัติคำขอลางาน
+        $leaveRequest->update([
+            'status' => 'ไม่อนุมัติ',
+            'rejected_at' => now()
+        ]);
+
+        return view('leave-action-result', [
+            'success' => true,
+            'message' => 'ไม่อนุมัติคำขอลางานเรียบร้อยแล้ว',
+            'action' => 'ไม่อนุมัติ',
+            'leaveRequest' => $leaveRequest
+        ]);
+    }
+
+    private function verifyToken($id, $token)
+    {
+        if (!$token) {
+            return false;
+        }
+
+        $decoded = base64_decode($token);
+        $parts = explode('|', $decoded);
+
+        if (count($parts) !== 2) {
+            return false;
+        }
+
+        $tokenId = $parts[0];
+        $timestamp = $parts[1];
+
+        // ตรวจสอบ ID ตรงกัน และลิงก์ยังไม่หมดอายุ (7 วัน)
+        return $tokenId == $id && (time() - $timestamp) <= (7 * 24 * 60 * 60);
+    }
 }
+

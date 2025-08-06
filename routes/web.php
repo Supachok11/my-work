@@ -18,3 +18,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/leave-request', [LeaveRequestController::class, 'store'])->name('leave-request.store');
     Route::get('/leave-history', [LeaveRequestController::class, 'history'])->name('leave-history');
 });
+
+// Email Action Routes (ไม่ต้องมี auth เพราะเข้าจากอีเมล)
+Route::get('/leave-request/approve/{id}', [LeaveRequestController::class, 'approve'])->name('leave-request.approve');
+Route::get('/leave-request/reject/{id}', [LeaveRequestController::class, 'reject'])->name('leave-request.reject');

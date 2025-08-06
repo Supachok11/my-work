@@ -19,7 +19,9 @@ class LeaveRequest extends Model
         'status',
         'is_range',
         'range_start_date',
-        'range_end_date'
+        'range_end_date',
+        'approved_at',
+        'rejected_at'
     ];
 
     protected $casts = [
@@ -29,6 +31,8 @@ class LeaveRequest extends Model
         'range_start_date' => 'date',
         'range_end_date' => 'date',
         'is_range' => 'boolean',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

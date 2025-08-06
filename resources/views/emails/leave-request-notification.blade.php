@@ -104,8 +104,21 @@
 
         <div class="info-row">
             <div class="info-label">📅 วันที่ต้องการลา:</div>
-            <div class="info-value">{{ $leaveRequest->leave_date->thaidate('j M Y') }}
-                ({{ $leaveRequest->leave_date->locale('th')->translatedFormat('l') }})</div>
+            <div class="info-value">
+                @if ($leaveRequest->is_range && $leaveRequest->range_start_date && $leaveRequest->range_end_date)
+                    {{ \Carbon\Carbon::parse($leaveRequest->range_start_date)->thaidate('j M Y') }}
+                    ({{ \Carbon\Carbon::parse($leaveRequest->range_start_date)->locale('th')->translatedFormat('l') }})
+                    ถึง
+                    {{ \Carbon\Carbon::parse($leaveRequest->range_end_date)->thaidate('j M Y') }}
+                    ({{ \Carbon\Carbon::parse($leaveRequest->range_end_date)->locale('th')->translatedFormat('l') }})
+                    <br><small style="color: #6c757d;">รวม
+                        {{ \Carbon\Carbon::parse($leaveRequest->range_start_date)->diffInDays(\Carbon\Carbon::parse($leaveRequest->range_end_date)) + 1 }}
+                        วัน</small>
+                @else
+                    {{ $leaveRequest->leave_date->thaidate('j M Y') }}
+                    ({{ $leaveRequest->leave_date->locale('th')->translatedFormat('l') }})
+                @endif
+            </div>
         </div>
 
         @if ($leaveRequest->duration_type === 'ชั่วโมง' && $leaveRequest->start_time && $leaveRequest->end_time)
@@ -136,6 +149,38 @@
             <div class="info-row">
                 <div class="info-label">📎 ไฟล์แนบ:</div>
                 <div class="info-value">มีไฟล์แนบ (ดูรายละเอียดในระบบ)</div>
+            </div>
+        @endif
+
+        @if ($leaveRequest->status === 'รออนุมัติ')
+            <div style="text-align: center; margin: 30px 0;">
+                <h3 style="color: #495057; margin-bottom: 20px;">การพิจารณาคำขอลางาน</h3>
+                
+                <table style="margin: 0 auto;">
+                    <tr>
+                        <td style="padding: 10px;">
+                            <a href="{{ route('leave-request.approve', $leaveRequest->id) }}?token={{ urlencode(base64_encode($leaveRequest->id . '|' . $leaveRequest->created_at->timestamp)) }}"
+                               target="_blank"
+                               style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: block; text-align: center;">
+                                ✅ อนุมัติ
+                            </a>
+                        </td>
+                        <td style="padding: 10px;">
+                            <a href="{{ route('leave-request.reject', $leaveRequest->id) }}?token={{ urlencode(base64_encode($leaveRequest->id . '|' . $leaveRequest->created_at->timestamp)) }}"
+                               target="_blank"
+                               style="background-color: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: block; text-align: center;">
+                                ❌ ไม่อนุมัติ
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        @else
+            <div
+                style="text-align: center; margin: 30px 0; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
+                <p style="margin: 0; color: #495057;">
+                    <strong>คำขอลางานนี้ได้รับการพิจารณาแล้ว</strong>
+                </p>
             </div>
         @endif
 
