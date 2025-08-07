@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Models\User;
+use App\Nova\Metrics\LeaveRequestMetric;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\BelongsTo;
 use Illuminate\Http\Request;
@@ -159,7 +160,9 @@ class LeaveRequest extends Resource
      */
     public function cards(NovaRequest $request): array
     {
-        return [];
+        return [
+            new LeaveRequestMetric()
+        ];
     }
 
     /**
