@@ -16,7 +16,9 @@ class LeaveRequestMetric extends Partition
     public function calculate(NovaRequest $request): PartitionResult
     {
         return $this->count(
-            $request, LeaveRequest::class, groupBy: 'status',
+            $request, 
+            LeaveRequest::where('user_id', $request->user()->id), 
+            groupBy: 'status',
         );
     }
 

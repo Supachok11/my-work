@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
@@ -35,11 +36,11 @@ class LeaveRequest extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
     ];
-    
+
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($leaveRequest) {
             // ตั้งค่า user_id หากไม่ได้ระบุ
             if (!$leaveRequest->user_id) {
@@ -52,7 +53,7 @@ class LeaveRequest extends Model
                 $leaveRequest->leave_date = $leaveRequest->range_start_date;
             }
         });
-        
+
         static::updating(function ($leaveRequest) {
             if ($leaveRequest->is_range && $leaveRequest->range_start_date) {
                 $leaveRequest->leave_date = $leaveRequest->range_start_date;

@@ -17,6 +17,9 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Mail\LeaveRequestNotification;
 
 class LeaveRequest extends Resource
 {
@@ -141,12 +144,12 @@ class LeaveRequest extends Resource
                 if ($this->duration_type === 'ชั่วโมง' && $this->start_time && $this->end_time) {
                     $start = \Carbon\Carbon::parse($this->start_time);
                     $end = \Carbon\Carbon::parse($this->end_time);
-                    
+
                     // คำนวณชั่วโมงและนาที
                     $totalMinutes = $start->diffInMinutes($end);
                     $hours = floor($totalMinutes / 60);
                     $minutes = $totalMinutes % 60;
-                    
+
                     // สร้างข้อความแสดงผล
                     $durationText = '';
                     if ($hours > 0) {
@@ -157,7 +160,7 @@ class LeaveRequest extends Resource
                     } else {
                         $durationText = $minutes . ' นาที';
                     }
-                    
+
                     $timeRange = $start->format('H:i') . ' - ' . $end->format('H:i');
                     return '<span class="text-green-600 font-semibold">' . $durationText . '</span><br><small class="text-gray-500">' . $timeRange . '</small>';
                 }
@@ -251,7 +254,8 @@ class LeaveRequest extends Resource
             ])->sortable()
                 ->readonly()
                 ->hideWhenCreating()
-                ->exceptOnForms(),
+                ->exceptOnForms()
+                ->default('รออนุมัติ'),
 
 
             DateTime::make('วันที่อนุมัติ', 'approved_at')
@@ -304,7 +308,9 @@ class LeaveRequest extends Resource
      */
     public function filters(NovaRequest $request): array
     {
-        return [];
+        return [
+            new \App\Nova\Filters\StatusFilter()
+        ];
     }
 
     /**
@@ -325,5 +331,26 @@ class LeaveRequest extends Resource
     public function actions(NovaRequest $request): array
     {
         return [];
+    }
+
+    /**
+     * Handle the resource after it has been created.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return void
+     */
+    public static function afterCreate(NovaRequest $request, $model)
+    {
+        // รีเฟรช model เพื่อให้แน่ใจว่าได้ข้อมูลล่าสุดรวมทั้ง relation
+        $model->refresh();
+
+        // ส่งอีเมลแจ้งเตือนหัวหน้าเมื่อสร้างคำขอลางานใหม่
+        try {
+            Mail::to('outhailnw@gmail.com')->send(new LeaveRequestNotification($model));
+        } catch (\Exception $e) {
+            // Log error if needed but don't break the process
+            Log::error('Failed to send leave request notification email: ' . $e->getMessage());
+        }
     }
 }
