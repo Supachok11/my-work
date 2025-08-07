@@ -48,6 +48,15 @@ class LeaveRequest extends Model
             if (!$leaveRequest->status) {
                 $leaveRequest->status = 'รออนุมัติ';
             }
+            if ($leaveRequest->is_range && $leaveRequest->range_start_date && !$leaveRequest->leave_date) {
+                $leaveRequest->leave_date = $leaveRequest->range_start_date;
+            }
+        });
+        
+        static::updating(function ($leaveRequest) {
+            if ($leaveRequest->is_range && $leaveRequest->range_start_date) {
+                $leaveRequest->leave_date = $leaveRequest->range_start_date;
+            }
         });
     }
 
