@@ -33,6 +33,12 @@ class LeaveRequest extends Resource
      */
     public static $title = 'leave_type';
 
+    public static function label()
+    {
+        return 'คำขอลา';
+    }
+
+
     /**
      * Columns that should be searched.
      */
@@ -103,6 +109,7 @@ class LeaveRequest extends Resource
                     'ลากิจ' => 'ลากิจ',
                     'ลาป่วย' => 'ลาป่วย',
                 ])
+                ->default('ลากิจ')
                 ->displayUsingLabels()
                 ->rules('required'),
 
@@ -111,6 +118,7 @@ class LeaveRequest extends Resource
                     'ทั้งวัน' => 'ทั้งวัน',
                     'ชั่วโมง' => 'ชั่วโมง',
                 ])
+                ->default('ทั้งวัน')
                 ->displayUsingLabels()
                 ->rules('required'),
 
@@ -120,6 +128,7 @@ class LeaveRequest extends Resource
 
             Date::make('วันที่ลา', 'leave_date')
                 ->sortable()
+                ->default(now())
                 ->dependsOn(['is_range'], function (Date $field, NovaRequest $request, $formData) {
                     if ($formData['is_range'] ?? false) {
                         $field->hide()->rules('nullable');
@@ -247,6 +256,11 @@ class LeaveRequest extends Resource
                 ->nullable()
                 ->acceptedTypes('.pdf,.jpg,.jpeg,.png,.doc,.docx')
                 ->rules('nullable', 'file', 'max:2048', 'mimes:pdf,jpg,jpeg,png,doc,docx')
+                ->storeAs(function (\Laravel\Nova\Http\Requests\NovaRequest $request, $model) {
+                    $file = $request->file('attachment_path');
+                    $ext = $file ? $file->getClientOriginalExtension() : null;
+                    return 'leave_' . $request->user()->id . '_' . now()->format('Ymd_His') . ($ext ? ('.' . $ext) : '');
+                })
                 ->help('อัพโหลดไฟล์หลักฐาน (PDF, รูปภาพ, Word) ขนาดไม่เกิน 2MB'),
 
             Badge::make('สถานะ', 'status')
@@ -286,6 +300,15 @@ class LeaveRequest extends Resource
                     return $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : null;
                 }),
         ];
+    }
+
+    // Limit selectable users in the BelongsTo field (defense in depth)
+    public static function relatableUsers(NovaRequest $request, $query): \Illuminate\Database\Eloquent\Builder
+    {
+        if (method_exists($request->user(), 'hasRole') && $request->user()->hasRole('manager')) {
+            return $query; // managers can pick anyone
+        }
+        return $query->where('id', $request->user()->id); // non-managers: only themselves
     }
 
     /**
