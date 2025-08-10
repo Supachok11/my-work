@@ -15,9 +15,16 @@ class LeaveRequestMetric extends Partition
      */
     public function calculate(NovaRequest $request): PartitionResult
     {
+        $query = LeaveRequest::query();
+
+        // If user is not admin, show only their own requests
+        if (!($request->user()->hasRole('admin'))) {
+            $query->where('user_id', $request->user()->id);
+        }
+
         return $this->count(
             $request, 
-            LeaveRequest::where('user_id', $request->user()->id), 
+            $query, 
             groupBy: 'status',
         );
     }

@@ -3,6 +3,8 @@
 namespace App\Nova;
 
 use App\Mail\LeaveRequestNotification;
+use App\Nova\Actions\ApproveLeaveRequest;
+use App\Nova\Actions\RejectLeaveRequest;
 use App\Nova\Metrics\LeaveRequestMetric;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
@@ -47,17 +49,17 @@ class LeaveRequest extends Resource
         'leave_type',
         'status',
         'additional_info',
-        // 'user.name', // keep relation eager-loaded in queries if you enable this
+        'user.name', // enable search by user name for admin
     ];
 
     /**
-     * Managers see all; others see only their own. Also eager-load and sort.
+     * admins see all; others see only their own. Also eager-load and sort.
      */
     public static function indexQuery(NovaRequest $request, $query): Builder
     {
         $query->with('user')->orderByDesc('created_at');
 
-        if (method_exists($request->user(), 'hasRole') && $request->user()->hasRole('manager')) {
+        if (method_exists($request->user(), 'hasRole') && $request->user()->hasRole('admin')) {
             return $query;
         }
 
@@ -69,7 +71,7 @@ class LeaveRequest extends Resource
      */
     public static function detailQuery(NovaRequest $request, $query): Builder
     {
-        if (method_exists($request->user(), 'hasRole') && $request->user()->hasRole('manager')) {
+        if (method_exists($request->user(), 'hasRole') && $request->user()->hasRole('admin')) {
             return $query->with('user');
         }
 
@@ -91,6 +93,13 @@ class LeaveRequest extends Resource
     {
         return [
             ID::make()->sortable(),
+
+            Text::make('พนักงาน', 'user.name')
+                ->onlyOnIndex()
+                ->sortable()
+                ->canSee(function ($request) {
+                    return method_exists($request->user(), 'hasRole') && $request->user()->hasRole('admin');
+                }),
 
             BelongsTo::make('พนักงาน', 'user', \App\Nova\User::class)
                 ->hideFromIndex()
@@ -287,6 +296,11 @@ class LeaveRequest extends Resource
                     return $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : null;
                 }),
 
+            Textarea::make('เหตุผลการไม่อนุมัติ', 'rejection_reason')
+                ->onlyOnDetail()
+                ->nullable()
+                ->readonly(),
+
             DateTime::make('สร้างเมื่อ', 'created_at')
                 ->onlyOnDetail()
                 ->sortable()
@@ -305,10 +319,10 @@ class LeaveRequest extends Resource
     // Limit selectable users in the BelongsTo field (defense in depth)
     public static function relatableUsers(NovaRequest $request, $query): \Illuminate\Database\Eloquent\Builder
     {
-        if (method_exists($request->user(), 'hasRole') && $request->user()->hasRole('manager')) {
-            return $query; // managers can pick anyone
+        if (method_exists($request->user(), 'hasRole') && $request->user()->hasRole('admin')) {
+            return $query; // admins can pick anyone
         }
-        return $query->where('id', $request->user()->id); // non-managers: only themselves
+        return $query->where('id', $request->user()->id); // non-admins: only themselves
     }
 
     /**
@@ -338,7 +352,10 @@ class LeaveRequest extends Resource
 
     public function actions(NovaRequest $request): array
     {
-        return [];
+        return [
+            new ApproveLeaveRequest(),
+            new RejectLeaveRequest(),
+        ];
     }
 
     /**

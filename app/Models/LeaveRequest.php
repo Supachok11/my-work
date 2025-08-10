@@ -23,7 +23,8 @@ class LeaveRequest extends Model
         'range_start_date',
         'range_end_date',
         'approved_at',
-        'rejected_at'
+        'rejected_at',
+        'rejection_reason'
     ];
 
     protected $casts = [

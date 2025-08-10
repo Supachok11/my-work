@@ -8,6 +8,7 @@ use Laravel\Nova\Fields\Gravatar;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Password;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 class User extends Resource
@@ -29,6 +30,16 @@ class User extends Resource
     public static $title = 'name';
 
     /**
+     * The displayable label for the resource.
+     *
+     * @return string
+     */
+    public static function label()
+    {
+        return 'ผู้ใช้งาน';
+    }
+
+    /**
      * The columns that should be searched.
      *
      * @var array
@@ -36,6 +47,15 @@ class User extends Resource
     public static $search = [
         'id', 'name', 'email',
     ];
+
+    /**
+     * Determine if the current user can view any users.
+     */
+    public static function authorizedToViewAny(Request $request): bool
+    {
+        $user = $request->user();
+        return $user && method_exists($user, 'hasRole') && $user->hasRole('admin');
+    }
 
     /**
      * Get the fields displayed by the resource.
@@ -58,6 +78,15 @@ class User extends Resource
                 ->rules('required', 'email', 'max:254')
                 ->creationRules('unique:users,email')
                 ->updateRules('unique:users,email,{{resourceId}}'),
+
+            Select::make('Role')
+                ->options([
+                    'user' => 'User',
+                    'admin' => 'Admin',
+                ])
+                ->default('user')
+                ->displayUsingLabels()
+                ->rules('required', 'in:user,admin'),
 
             Password::make('Password')
                 ->onlyOnForms()
