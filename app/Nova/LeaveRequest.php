@@ -35,6 +35,12 @@ class LeaveRequest extends Resource
      */
     public static $title = 'leave_type';
 
+    /** Put cell borders so data scans like a real app */
+    public static $showColumnBorders = true;
+
+    /** Clicking a row opens the edit form (fewer clicks) */
+    public static $clickAction = 'edit';
+
     public static function label()
     {
         return 'คำขอลา';

@@ -4,7 +4,9 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "build-leave-portal": "cd nova-components/LeavePortal && npm run dev",
+        "build-leave-portal-prod": "cd nova-components/LeavePortal && npm run prod"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

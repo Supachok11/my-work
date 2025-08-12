@@ -17,7 +17,17 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         parent::boot();
 
-        //
+        // Set initial path to redirect to Leave Portal
+        Nova::initialPath('/leave-portal');
+
+        Nova::withBreadcrumbs();
+
+        Nova::withoutThemeSwitcher();
+
+        // Customize Nova
+        Nova::footer(function () {
+            return '© ' . date('Y') . ' Leave Portal. All rights reserved.';
+        });
     }
 
     /**
@@ -79,7 +89,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      */
     public function tools(): array
     {
-        return [];
+        return [
+            new \Leave\LeavePortal\LeavePortal,
+        ];
     }
 
     /**
@@ -88,7 +100,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     public function register(): void
     {
         parent::register();
-
         //
     }
 }
