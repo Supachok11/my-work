@@ -107,7 +107,7 @@
                 มีคำขอลา {{ pendingCount }} รายการที่รอการอนุมัติจากคุณ
               </p>
               <a href="/nova/resources/leave-requests"
-                class="inline-flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg">
+                class="inline-flex items-center px-4 py-2 border border-gray-200 bg-yellow text-black text-sm font-medium rounded-lg">
                 ตรวจสอบคำขอ →
               </a>
             </div>
