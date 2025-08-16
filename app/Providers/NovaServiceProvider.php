@@ -23,8 +23,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         Nova::withBreadcrumbs();
 
         Nova::withoutThemeSwitcher();
-
-        // Customize Nova
+        
         Nova::footer(function () {
             return '© ' . date('Y') . ' Leave Portal. All rights reserved.';
         });

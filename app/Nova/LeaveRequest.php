@@ -20,6 +20,7 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Panel;
 
 class LeaveRequest extends Resource
 {
@@ -100,67 +101,136 @@ class LeaveRequest extends Resource
         return [
             ID::make()->sortable(),
 
+            // Index-only "employee" label for admins
             Text::make('พนักงาน', 'user.name')
                 ->onlyOnIndex()
                 ->sortable()
-                ->canSee(function ($request) {
-                    return method_exists($request->user(), 'hasRole') && $request->user()->hasRole('admin');
-                }),
+                ->canSee(fn($req) => method_exists($req->user(), 'hasRole') && $req->user()->hasRole('admin')),
 
+            // Ensure creator is current user (hidden on forms)
             BelongsTo::make('พนักงาน', 'user', \App\Nova\User::class)
                 ->hideFromIndex()
                 ->searchable()
                 ->hideWhenCreating()
                 ->readonly()
-                ->fillUsing(function ($request, $model, $attribute, $requestAttribute) {
-                    // Ensure the creator is always the authenticated user
-                    if (!$model->exists) {
-                        $model->{$attribute} = $request->user()->id;
-                    }
+                ->fillUsing(function ($req, $model, $attribute) {
+                    if (!$model->exists) $model->{$attribute} = $req->user()->id;
                 }),
 
-            Select::make('ประเภทการลา', 'leave_type')
-                ->options([
-                    'ลากิจ' => 'ลากิจ',
-                    'ลาป่วย' => 'ลาป่วย',
-                ])
-                ->default('ลากิจ')
-                ->displayUsingLabels()
-                ->rules('required'),
+            /* ========= LEFT SIDE: GROUPED PANELS ========= */
 
-            Select::make('ระยะเวลา', 'duration_type')
-                ->options([
-                    'ทั้งวัน' => 'ทั้งวัน',
-                    'ชั่วโมง' => 'ชั่วโมง',
-                ])
-                ->default('ทั้งวัน')
-                ->displayUsingLabels()
-                ->rules('required'),
+            Panel::make('รายละเอียดการลา', [
+                Select::make('ประเภทการลา', 'leave_type')
+                    ->options(['ลากิจ' => 'ลากิจ', 'ลาป่วย' => 'ลาป่วย'])
+                    ->default('ลากิจ')->displayUsingLabels()->rules('required'),
 
-            Boolean::make('ลาหลายวัน', 'is_range')
-                ->hideFromIndex()
-                ->default(false),
+                Select::make('ระยะเวลา', 'duration_type')
+                    ->options(['ทั้งวัน' => 'ทั้งวัน', 'ชั่วโมง' => 'ชั่วโมง'])
+                    ->default('ทั้งวัน')->displayUsingLabels()->rules('required'),
 
-            Date::make('วันที่ลา', 'leave_date')
-                ->sortable()
-                ->default(now())
-                ->dependsOn(['is_range'], function (Date $field, NovaRequest $request, $formData) {
-                    if ($formData['is_range'] ?? false) {
-                        $field->hide()->rules('nullable');
-                    } else {
-                        $field->show()
-                            ->creationRules('required', 'after_or_equal:today')
-                            ->updateRules('required'); // allow past when editing
-                    }
-                })
-                ->rules('required_unless:is_range,true'),
+                Boolean::make('ลาหลายวัน', 'is_range')
+                    ->hideFromIndex()
+                    ->default(false),
+
+                // Single-day date (hidden if multi-day)
+                Date::make('วันที่ลา', 'leave_date')
+                    ->sortable()
+                    ->default(now())
+                    ->dependsOn(['is_range'], function (Date $field, NovaRequest $req, $form) {
+                        if ($form['is_range'] ?? false) {
+                            $field->hide()->rules('nullable');
+                        } else {
+                            $field->show()
+                                ->creationRules('required', 'after_or_equal:today')
+                                ->updateRules('required');
+                        }
+                    })
+                    ->rules('required_unless:is_range,true')
+                    ->help('เลือกวันที่สำหรับการลาทั้งวัน'),
+            ])->collapsible(),
+
+            Panel::make('เวลาตามชั่วโมง', [
+                DateTime::make('เวลาเริ่ม', 'start_time')
+                    ->hideFromIndex()->nullable()
+                    ->displayUsing(fn($v) => $v ? \Carbon\Carbon::parse($v)->format('H:i') : null)
+                    ->dependsOn(['duration_type'], function (DateTime $f, NovaRequest $req, $form) {
+                        if (($form['duration_type'] ?? null) === 'ชั่วโมง') {
+                            $f->show()->rules('required_if:duration_type,ชั่วโมง');
+                        } else {
+                            $f->hide()->rules('prohibited_unless:duration_type,ชั่วโมง');
+                        }
+                    })
+                    ->help('ระบุเวลาเริ่ม (เฉพาะเมื่อเลือก "ชั่วโมง")'),
+
+                DateTime::make('เวลาสิ้นสุด', 'end_time')
+                    ->hideFromIndex()->nullable()
+                    ->displayUsing(fn($v) => $v ? \Carbon\Carbon::parse($v)->format('H:i') : null)
+                    ->dependsOn(['duration_type', 'start_time'], function (DateTime $f, NovaRequest $req, $form) {
+                        if (($form['duration_type'] ?? null) === 'ชั่วโมง') {
+                            $f->show()->rules('required_if:duration_type,ชั่วโมง', 'after:start_time');
+                        } else {
+                            $f->hide()->rules('prohibited_unless:duration_type,ชั่วโมง');
+                        }
+                    })
+                    ->help('ระบุเวลาสิ้นสุด (ต้องหลังเวลาเริ่ม)'),
+
+            ])->collapsible(),
+
+            Panel::make('ช่วงหลายวัน', [
+                Date::make('วันเริ่มต้น', 'range_start_date')
+                    ->hideFromIndex()->nullable()
+                    ->dependsOn(['is_range'], function (Date $f, NovaRequest $req, $form) {
+                        if ($form['is_range'] ?? false) {
+                            $f->show()->creationRules('required', 'after_or_equal:today')->updateRules('required');
+                        } else {
+                            $f->hide();
+                        }
+                    })
+                    ->rules('required_if:is_range,true')
+                    ->help('วันที่เริ่มต้นสำหรับการลาหลายวัน'),
+
+                Date::make('วันสิ้นสุด', 'range_end_date')
+                    ->hideFromIndex()->nullable()
+                    ->dependsOn(['is_range', 'range_start_date'], function (Date $f, NovaRequest $req, $form) {
+                        if ($form['is_range'] ?? false) {
+                            $rules = ['required_if:is_range,true'];
+                            if (!empty($form['range_start_date'])) {
+                                $rules[] = 'after_or_equal:' . $form['range_start_date'];
+                            }
+                            $f->show()->rules($rules);
+                        } else {
+                            $f->hide();
+                        }
+                    })
+                    ->help('ต้องไม่ก่อนวันเริ่มต้น'),
+            ])->collapsible(),
+
+            Panel::make('คำอธิบาย', [
+                Textarea::make('ข้อมูลเพิ่มเติม', 'additional_info')
+                    ->rows(3)->hideFromIndex()
+                    ->rules('required', 'max:500')
+                    ->placeholder('โปรดระบุเหตุผลการลาอย่างชัดเจน...'),
+            ])->collapsible(),
+
+            Panel::make('ไฟล์แนบ', [
+                File::make('ไฟล์แนบ', 'attachment_path')
+                    ->disk('public')->path('attachments')->prunable()->hideFromIndex()->nullable()
+                    ->acceptedTypes('.pdf,.jpg,.jpeg,.png,.doc,.docx')
+                    ->rules('nullable', 'file', 'max:2048', 'mimes:pdf,jpg,jpeg,png,doc,docx')
+                    ->storeAs(function (NovaRequest $req) {
+                        $file = $req->file('attachment_path');
+                        $ext  = $file?->getClientOriginalExtension();
+                        return 'leave_' . $req->user()->id . '_' . now()->format('Ymd_His') . ($ext ? '.' . $ext : '');
+                    })
+                    ->help('อัปโหลดหลักฐาน (PDF/รูปภาพ/Word) ≤ 2MB'),
+            ])->collapsible(),
+
 
             Text::make('ระยะเวลาลา', function () {
                 if ($this->is_range && $this->range_start_date && $this->range_end_date) {
                     $start = \Carbon\Carbon::parse($this->range_start_date);
                     $end   = \Carbon\Carbon::parse($this->range_end_date);
                     $days  = $start->diffInDays($end) + 1;
-
                     return sprintf(
                         '<span class="text-blue-600 font-semibold">%d วัน</span><br><small class="text-gray-500">%s - %s</small>',
                         $days,
@@ -168,157 +238,44 @@ class LeaveRequest extends Resource
                         $end->format('d/m/Y')
                     );
                 }
-
                 if ($this->duration_type === 'ชั่วโมง' && $this->start_time && $this->end_time) {
-                    $start = \Carbon\Carbon::parse($this->start_time);
-                    $end   = \Carbon\Carbon::parse($this->end_time);
-
-                    $totalMinutes = max(0, $start->diffInMinutes($end, false));
-                    $hours   = intdiv($totalMinutes, 60);
-                    $minutes = $totalMinutes % 60;
-
-                    $durationText = $hours > 0
-                        ? $hours . ' ชั่วโมง' . ($minutes > 0 ? ' ' . $minutes . ' นาที' : '')
-                        : $minutes . ' นาที';
-
-                    $timeRange = $start->format('H:i') . ' - ' . $end->format('H:i');
-
-                    return '<span class="font-semibold">' . $durationText . '</span><br><small class="text-gray-500">' . $timeRange . '</small>';
+                    $s = \Carbon\Carbon::parse($this->start_time);
+                    $e = \Carbon\Carbon::parse($this->end_time);
+                    $mins = max(0, $s->diffInMinutes($e, false));
+                    $h = intdiv($mins, 60);
+                    $m = $mins % 60;
+                    $durText = $h ? ($h . ' ชั่วโมง' . ($m ? ' ' . $m . ' นาที' : '')) : ($m . ' นาที');
+                    return '<span class="font-semibold">' . $durText . '</span><br><small class="text-gray-500">' . $s->format('H:i') . ' - ' . $e->format('H:i') . '</small>';
                 }
-
                 if ($this->duration_type === 'ทั้งวัน') {
-                    $date = $this->leave_date ? \Carbon\Carbon::parse($this->leave_date)->format('d/m/Y') : '-';
-                    return '<span class="font-semibold">ทั้งวัน</span><br><small class="text-gray-500">' . $date . '</small>';
+                    $d = $this->leave_date ? \Carbon\Carbon::parse($this->leave_date)->format('d/m/Y') : '-';
+                    return '<span class="font-semibold">ทั้งวัน</span><br><small class="text-gray-500">' . $d . '</small>';
                 }
-
                 return e($this->duration_type ?? '-');
             })->onlyOnIndex()->asHtml(),
 
-            DateTime::make('เวลาเริ่ม', 'start_time')
-                ->hideFromIndex()
-                ->nullable()
-                ->displayUsing(function ($value) {
-                    return $value ? \Carbon\Carbon::parse($value)->format('H:i') : null;
-                })
-                ->dependsOn(['duration_type'], function (DateTime $field, NovaRequest $request, $formData) {
-                    if (($formData['duration_type'] ?? null) === 'ชั่วโมง') {
-                        $field->show()
-                            ->rules('required_if:duration_type,ชั่วโมง');
-                    } else {
-                        $field->hide()->rules('prohibited_unless:duration_type,ชั่วโมง');
-                    }
-                })
-                ->help('ระบุเวลาเริ่มต้นสำหรับการลาแบบชั่วโมง'),
-
-            DateTime::make('เวลาสิ้นสุด', 'end_time')
-                ->hideFromIndex()
-                ->nullable()
-                ->displayUsing(function ($value) {
-                    return $value ? \Carbon\Carbon::parse($value)->format('H:i') : null;
-                })
-                ->dependsOn(['duration_type', 'start_time'], function (DateTime $field, NovaRequest $request, $formData) {
-                    if (($formData['duration_type'] ?? null) === 'ชั่วโมง') {
-                        $field->show()
-                            ->rules('required_if:duration_type,ชั่วโมง', 'after:start_time');
-                    } else {
-                        $field->hide()->rules('prohibited_unless:duration_type,ชั่วโมง');
-                    }
-                })
-                ->help('ระบุเวลาสิ้นสุดสำหรับการลาแบบชั่วโมง'),
-
-            Date::make('วันเริ่มต้น', 'range_start_date')
-                ->hideFromIndex()
-                ->nullable()
-                ->dependsOn(['is_range'], function (Date $field, NovaRequest $request, $formData) {
-                    if ($formData['is_range'] ?? false) {
-                        $field->show()
-                            ->creationRules('required', 'after_or_equal:today')
-                            ->updateRules('required');
-                    } else {
-                        $field->hide();
-                    }
-                })
-                ->rules('required_if:is_range,true')
-                ->help('วันที่เริ่มต้นสำหรับการลาหลายวัน'),
-
-            Date::make('วันสิ้นสุด', 'range_end_date')
-                ->hideFromIndex()
-                ->nullable()
-                ->dependsOn(['is_range', 'range_start_date'], function (Date $field, NovaRequest $request, $formData) {
-                    if ($formData['is_range'] ?? false) {
-                        $rules = ['required_if:is_range,true'];
-                        if (!empty($formData['range_start_date'])) {
-                            $rules[] = 'after_or_equal:' . $formData['range_start_date'];
-                        }
-                        $field->show()->rules($rules);
-                    } else {
-                        $field->hide();
-                    }
-                })
-                ->help('วันที่สิ้นสุดสำหรับการลาหลายวัน (ต้องไม่ก่อนวันที่เริ่มต้น)'),
-
-            Textarea::make('ข้อมูลเพิ่มเติม', 'additional_info')
-                ->rows(4)
-                ->hideFromIndex()
-                ->rules('required', 'max:500')
-                ->placeholder('โปรดระบุเหตุผลการลาอย่างชัดเจน...'),
-
-            File::make('ไฟล์แนบ', 'attachment_path')
-                ->disk('public')
-                ->path('attachments')
-                ->prunable()
-                ->hideFromIndex()
-                ->nullable()
-                ->acceptedTypes('.pdf,.jpg,.jpeg,.png,.doc,.docx')
-                ->rules('nullable', 'file', 'max:2048', 'mimes:pdf,jpg,jpeg,png,doc,docx')
-                ->storeAs(function (\Laravel\Nova\Http\Requests\NovaRequest $request, $model) {
-                    $file = $request->file('attachment_path');
-                    $ext = $file ? $file->getClientOriginalExtension() : null;
-                    return 'leave_' . $request->user()->id . '_' . now()->format('Ymd_His') . ($ext ? ('.' . $ext) : '');
-                })
-                ->help('อัพโหลดไฟล์หลักฐาน (PDF, รูปภาพ, Word) ขนาดไม่เกิน 2MB'),
-
             Badge::make('สถานะ', 'status')
-                ->map([
-                    'รออนุมัติ' => 'warning',
-                    'อนุมัติ' => 'success',
-                    'ไม่อนุมัติ' => 'danger',
-                ])
-                ->sortable()
-                ->readonly()
-                ->exceptOnForms(),
+                ->map(['รออนุมัติ' => 'warning', 'อนุมัติ' => 'success', 'ไม่อนุมัติ' => 'danger'])
+                ->sortable()->readonly()->exceptOnForms(),
 
             DateTime::make('วันที่อนุมัติ', 'approved_at')
-                ->onlyOnDetail()
-                ->nullable()
-                ->displayUsing(function ($value) {
-                    return $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : null;
-                }),
+                ->onlyOnDetail()->nullable()
+                ->displayUsing(fn($v) => $v ? \Carbon\Carbon::parse($v)->format('d/m/Y H:i') : null),
 
             DateTime::make('วันที่ไม่อนุมัติ', 'rejected_at')
-                ->onlyOnDetail()
-                ->nullable()
-                ->displayUsing(function ($value) {
-                    return $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : null;
-                }),
+                ->onlyOnDetail()->nullable()
+                ->displayUsing(fn($v) => $v ? \Carbon\Carbon::parse($v)->format('d/m/Y H:i') : null),
 
             Textarea::make('เหตุผลการไม่อนุมัติ', 'rejection_reason')
-                ->onlyOnDetail()
-                ->nullable()
-                ->readonly(),
+                ->onlyOnDetail()->nullable()->readonly(),
 
             DateTime::make('สร้างเมื่อ', 'created_at')
-                ->onlyOnDetail()
-                ->sortable()
-                ->displayUsing(function ($value) {
-                    return $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : null;
-                }),
+                ->onlyOnDetail()->sortable()
+                ->displayUsing(fn($v) => $v ? \Carbon\Carbon::parse($v)->format('d/m/Y H:i') : null),
 
             DateTime::make('อัปเดตเมื่อ', 'updated_at')
                 ->onlyOnDetail()
-                ->displayUsing(function ($value) {
-                    return $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : null;
-                }),
+                ->displayUsing(fn($v) => $v ? \Carbon\Carbon::parse($v)->format('d/m/Y H:i') : null),
         ];
     }
 
