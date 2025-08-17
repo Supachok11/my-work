@@ -17,7 +17,8 @@
         "leave/leave-portal": "@dev",
         "phattarachai/thaidate": "^12.1",
         "symfony/http-client": "^7.3",
-        "symfony/mailgun-mailer": "^7.3"
+        "symfony/mailgun-mailer": "^7.3",
+        "company/time-attendance": "@dev"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -40,6 +41,10 @@
         "1": {
             "type": "path",
             "url": "./nova-components/LeavePortal"
+        },
+        "2": {
+            "type": "path",
+            "url": "./nova-components/TimeAttendance"
         }
     },
     "autoload": {

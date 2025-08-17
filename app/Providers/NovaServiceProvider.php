@@ -81,6 +81,20 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         ];
     }
 
+    // /**
+    //  * Get the resources that should be listed in the Nova sidebar.
+    //  *
+    //  * @return array<int, \Laravel\Nova\Resource>
+    //  */
+    // protected function resources(): array
+    // {
+    //     return [
+    //         new \App\Nova\User,
+    //         new \App\Nova\LeaveRequest,
+    //         new \App\Nova\TimeLog,
+    //     ];
+    // }
+
     /**
      * Get the tools that should be listed in the Nova sidebar.
      *
@@ -90,6 +104,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         return [
             new \Leave\LeavePortal\LeavePortal,
+            new \Company\TimeAttendance\TimeAttendance,
         ];
     }
 
