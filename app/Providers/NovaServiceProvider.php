@@ -17,15 +17,14 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         parent::boot();
 
-        // Set initial path to redirect to Leave Portal
-        Nova::initialPath('/leave-portal');
+        Nova::initialPath('/time-attendance');
 
         Nova::withBreadcrumbs();
 
         Nova::withoutThemeSwitcher();
         
         Nova::footer(function () {
-            return '© ' . date('Y') . ' Leave Portal. All rights reserved.';
+            return '© ' . date('Y') . ' MY WORK. All rights reserved.';
         });
     }
 
