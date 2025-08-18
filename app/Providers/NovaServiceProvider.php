@@ -17,7 +17,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     {
         parent::boot();
 
-        Nova::initialPath('/time-attendance');
+        Nova::initialPath('/mywork-hub');
 
         Nova::withBreadcrumbs();
 
@@ -102,8 +102,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     public function tools(): array
     {
         return [
-            new \Leave\LeavePortal\LeavePortal,
+            new \Company\MyworkHub\MyworkHub,
             new \Company\TimeAttendance\TimeAttendance,
+            new \Leave\LeavePortal\LeavePortal,
         ];
     }
 

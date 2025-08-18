@@ -18,7 +18,8 @@
         "phattarachai/thaidate": "^12.1",
         "symfony/http-client": "^7.3",
         "symfony/mailgun-mailer": "^7.3",
-        "company/time-attendance": "@dev"
+        "company/time-attendance": "@dev",
+        "company/mywork-hub": "@dev"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -45,6 +46,10 @@
         "2": {
             "type": "path",
             "url": "./nova-components/TimeAttendance"
+        },
+        "3": {
+            "type": "path",
+            "url": "./nova-components/MyworkHub"
         }
     },
     "autoload": {

@@ -8,7 +8,9 @@
         "build-leave-portal": "cd nova-components/LeavePortal && npm run dev",
         "build-leave-portal-prod": "cd nova-components/LeavePortal && npm run prod",
         "build-time-attendance": "cd nova-components/TimeAttendance && npm run dev",
-        "build-time-attendance-prod": "cd nova-components/TimeAttendance && npm run prod"
+        "build-time-attendance-prod": "cd nova-components/TimeAttendance && npm run prod",
+        "build-mywork-hub": "cd nova-components/MyworkHub && npm run dev",
+        "build-mywork-hub-prod": "cd nova-components/MyworkHub && npm run prod"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

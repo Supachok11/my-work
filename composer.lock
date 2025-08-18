@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "63e354907988db3e00dc24dd9af1122c",
+    "content-hash": "79209c9e96eb2f891af7a393d78d6566",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -245,6 +245,47 @@
                 }
             ],
             "time": "2024-02-09T16:56:22+00:00"
+        },
+        {
+            "name": "company/mywork-hub",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "./nova-components/MyworkHub",
+                "reference": "1287223a430c38de1d20e6977e586de0d7479822"
+            },
+            "require": {
+                "illuminate/support": "^10.0|^11.0|^12.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "laravel/nova": "^5.0",
+                "laravel/nova-devtool": "^1.7"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Company\\MyworkHub\\ToolServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Company\\MyworkHub\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova tool.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "transport-options": {
+                "relative": true
+            }
         },
         {
             "name": "company/time-attendance",
@@ -9693,6 +9734,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "company/mywork-hub": 20,
         "company/time-attendance": 20,
         "leave/leave-portal": 20
     },

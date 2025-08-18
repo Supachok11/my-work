@@ -1,20 +1,20 @@
 <?php
 
-namespace Leave\LeavePortal;
+namespace Company\MyworkHub;
 
 use Illuminate\Http\Request;
 use Laravel\Nova\Menu\MenuSection;
 use Laravel\Nova\Nova;
 use Laravel\Nova\Tool;
 
-class LeavePortal extends Tool
+class MyworkHub extends Tool
 {
     /**
      * Perform any tasks that need to happen when the tool is booted.
      */
     public function boot(): void
     {
-        Nova::mix('leave-portal', __DIR__.'/../dist/mix-manifest.json');
+        Nova::mix('mywork-hub', __DIR__.'/../dist/mix-manifest.json');
     }
 
     /**
@@ -22,8 +22,8 @@ class LeavePortal extends Tool
      */
     public function menu(Request $request): MenuSection
     {
-        return MenuSection::make('คำขอลา')
-            ->path('/leave-portal')
-            ->icon('document');
+        return MenuSection::make('หน้าหลัก')
+            ->path('/mywork-hub')
+            ->icon('home');
     }
 }

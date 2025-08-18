@@ -66,7 +66,7 @@
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <div class="font-medium text-gray-800">บริษัท ABC จำกัด</div>
+                        <div class="font-medium text-gray-800">บริษัท EMWORK Group จำกัด</div>
                         <div class="text-sm text-blue-600">ระยะทาง: 30 ม.</div>
                     </div>
                 </div>
@@ -77,7 +77,7 @@
                 <!-- Check In Button -->
                 <div v-if="!todayLog || !todayLog.clock_in">
                     <button @click="clockIn" :disabled="loading"
-                        class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-black py-4 rounded-2xl text-lg font-semibold transition-all duration-200 shadow-lg">
+                        class="w-full bg-white-600 hover:bg-gray-700 disabled:bg-gray-400 text-black py-4 rounded-2xl text-lg font-semibold transition-all duration-200 shadow-lg">
                         <div v-if="loading" class="flex items-center justify-center">
                             <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2"></div>
                             กำลังบันทึก...
