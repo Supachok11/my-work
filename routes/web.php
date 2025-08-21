@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LeaveRequestController;
+use App\Http\Controllers\TestDataController;
 
 
 // Authentication Routes
@@ -22,3 +23,6 @@ Route::middleware('auth')->group(function () {
 // Email Action Routes (ไม่ต้องมี auth เพราะเข้าจากอีเมล)
 Route::get('/leave-request/approve/{id}', [LeaveRequestController::class, 'approve'])->name('leave-request.approve');
 Route::get('/leave-request/reject/{id}', [LeaveRequestController::class, 'reject'])->name('leave-request.reject');
+
+// Test Data Route (สำหรับ Development)
+Route::get('/create-test-data', [TestDataController::class, 'createTestData'])->name('create-test-data');

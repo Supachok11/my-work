@@ -105,6 +105,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new \Company\MyworkHub\MyworkHub,
             new \Company\TimeAttendance\TimeAttendance,
             new \Leave\LeavePortal\LeavePortal,
+            new \Company\MyTasks\MyTasks,
         ];
     }
 

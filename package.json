@@ -10,7 +10,9 @@
         "build-time-attendance": "cd nova-components/TimeAttendance && npm run dev",
         "build-time-attendance-prod": "cd nova-components/TimeAttendance && npm run prod",
         "build-mywork-hub": "cd nova-components/MyworkHub && npm run dev",
-        "build-mywork-hub-prod": "cd nova-components/MyworkHub && npm run prod"
+        "build-mywork-hub-prod": "cd nova-components/MyworkHub && npm run prod",
+        "build-my-tasks": "cd nova-components/MyTasks && npm run dev",
+        "build-my-tasks-prod": "cd nova-components/MyTasks && npm run prod"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\Auth;
 
 class LeaveRequest extends Model
 {
+    /**
+     * The database connection that should be used by the model.
+     *
+     * @var string
+     */
+    protected $connection = 'sqlite_auth';
+
     protected $fillable = [
         'user_id',
         'leave_type',

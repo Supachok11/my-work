@@ -8,6 +8,13 @@ use Carbon\Carbon;
 
 class TimeLog extends Model
 {
+    /**
+     * The database connection that should be used by the model.
+     *
+     * @var string
+     */
+    protected $connection = 'sqlite_auth';
+
     protected $fillable = [
         'user_id',
         'work_date',

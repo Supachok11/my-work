@@ -19,7 +19,8 @@
         "symfony/http-client": "^7.3",
         "symfony/mailgun-mailer": "^7.3",
         "company/time-attendance": "@dev",
-        "company/mywork-hub": "@dev"
+        "company/mywork-hub": "@dev",
+        "company/my-tasks": "@dev"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -50,6 +51,10 @@
         "3": {
             "type": "path",
             "url": "./nova-components/MyworkHub"
+        },
+        "4": {
+            "type": "path",
+            "url": "./nova-components/MyTasks"
         }
     },
     "autoload": {

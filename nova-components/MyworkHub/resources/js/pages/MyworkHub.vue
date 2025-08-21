@@ -199,8 +199,7 @@ export default {
         },
 
         goToMyTasks() {
-            // TODO: Implement tasks functionality
-            alert('ฟีเจอร์งานของฉัน กำลังพัฒนา')
+            window.location.href = '/nova/my-tasks'
         },
 
         goToReports() {

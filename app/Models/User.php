@@ -15,6 +15,13 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * The database connection that should be used by the model.
+     *
+     * @var string
+     */
+    protected $connection = 'sqlite_auth';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
